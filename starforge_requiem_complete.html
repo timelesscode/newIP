@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STARFORGE REQUIEM — Complete Edition</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --aether:#00f5ff; --aether2:#00b8cc; --aether-dim:#003d47; --aether-glow:rgba(0,245,255,0.15);
+  --danger:#ff2b2b; --danger2:#ff6060; --gold:#ffb800; --gold2:#ffd060;
+  --jin:#ff2244; --jin2:#ff6677; --lyra:#aaddff; --lyra2:#ddeeff;
+  --rook:#66cc66; --mira:#ff99cc;
+  --bg:#04060e; --bg2:#060a18; --panel:rgba(4,8,20,0.94);
+  --border:rgba(0,245,255,0.2); --border2:rgba(0,245,255,0.4);
+  --text:#b8d4e8; --text2:#7899aa;
+  --font-title:'Orbitron',sans-serif; --font-body:'Rajdhani',sans-serif; --font-mono:'Share Tech Mono',monospace;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
+body{font-family:var(--font-mono);color:var(--text);cursor:default;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SCREEN SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;}
+.screen.active{display:flex;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SHARED COMPONENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.star-field{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle var(--d,2s) ease-in-out infinite;}
+@keyframes twinkle{0%,100%{opacity:var(--lo,.1);}50%{opacity:1;}}
+
+.nebula-bg{position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 30% 40%,rgba(0,40,80,.25),transparent),
+             radial-gradient(ellipse 60% 40% at 75% 70%,rgba(20,0,60,.2),transparent),
+             radial-gradient(ellipse 50% 80% at 60% 20%,rgba(0,15,40,.3),transparent);}
+
+.scanlines{position:absolute;inset:0;pointer-events:none;z-index:999;opacity:.025;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,1) 2px,rgba(0,0,0,1) 4px);}
+
+/* Buttons */
+.btn{font-family:var(--font-title);font-size:clamp(9px,1.1vw,13px);letter-spacing:.18em;
+  padding:10px 28px;background:transparent;border:1px solid var(--aether-dim);color:var(--aether);
+  cursor:pointer;transition:all .18s;position:relative;overflow:hidden;white-space:nowrap;}
+.btn::before{content:'';position:absolute;left:-100%;top:0;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,var(--aether-glow),transparent);transition:left .3s;}
+.btn:hover::before{left:100%;}
+.btn:hover{border-color:var(--aether);background:rgba(0,245,255,.07);
+  box-shadow:0 0 18px rgba(0,245,255,.2);text-shadow:0 0 8px var(--aether);}
+.btn:active{transform:scale(.97);}
+.btn.danger{border-color:rgba(255,43,43,.4);color:var(--danger);}
+.btn.danger:hover{border-color:var(--danger);background:rgba(255,43,43,.07);}
+.btn.gold{border-color:rgba(255,184,0,.4);color:var(--gold);}
+.btn.gold:hover{border-color:var(--gold);background:rgba(255,184,0,.07);}
+.btn.sm{font-size:clamp(7px,.9vw,10px);padding:7px 18px;}
+.btn.lg{font-size:clamp(12px,1.5vw,17px);padding:13px 36px;}
+.btn:disabled{opacity:.3;pointer-events:none;}
+
+/* Section label */
+.sec-label{font-family:var(--font-title);font-size:clamp(7px,.8vw,9px);letter-spacing:.4em;
+  color:var(--text2);text-transform:uppercase;margin-bottom:6px;}
+
+/* Stat bar */
+.bar-track{width:100%;height:5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);position:relative;}
+.bar-fill{height:100%;transition:width .25s;position:relative;}
+.bar-fill::after{content:'';position:absolute;right:0;top:0;width:2px;height:100%;background:#fff;opacity:.5;}
+.bar-hp{background:linear-gradient(90deg,var(--danger),var(--danger2));}
+.bar-ae{background:linear-gradient(90deg,var(--aether2),var(--aether));}
+.bar-xp{background:linear-gradient(90deg,#6644ff,#aa88ff);}
+.bar-shield{background:linear-gradient(90deg,#4488cc,#88ccff);}
+
+/* Panel */
+.card{background:var(--panel);border:1px solid var(--border);padding:14px 18px;position:relative;}
+.card::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--aether);}
+.card.jin-card::before{background:var(--jin);}
+.card.lyra-card::before{background:var(--lyra);}
+.card.gold-card::before{background:var(--gold);}
+
+/* Glow text */
+.glow{text-shadow:0 0 20px currentColor;}
+.glow2{text-shadow:0 0 40px currentColor,0 0 80px currentColor;}
+@keyframes pulse-glow{0%,100%{text-shadow:0 0 20px currentColor;}50%{text-shadow:0 0 50px currentColor,0 0 90px currentColor;}}
+.pulse{animation:pulse-glow 2s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.float-anim{animation:float 3s ease-in-out infinite;}
+
+/* Divider */
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--aether-dim),transparent);margin:12px 0;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TITLE SCREEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#screen-title{background:radial-gradient(ellipse at 50% 35%,#08142a,var(--bg) 70%);}
+.title-logo{font-family:var(--font-title);font-weight:900;font-size:clamp(26px,5vw,64px);
+  letter-spacing:.22em;color:var(--aether);animation:pulse-glow 2.5s ease-in-out infinite;text-align:center;}
+.title-sub{font-family:var(--font-body);font-weight:600;font-size:clamp(11px,1.6vw,18px);
+  letter-spacing:.55em;color:var(--gold);margin-top:6px;text-align:center;}
+.title-chapter-tag{font-size:clamp(8px,1vw,11px);letter-spacing:.3em;color:var(--text2);
+  margin-top:4px;text-align:center;opacity:.7;}
+.title-menu{display:flex;flex-direction:column;gap:10px;margin-top:28px;align-items:center;width:260px;}
+.title-credits{position:absolute;bottom:16px;font-size:9px;letter-spacing:.2em;opacity:.3;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HANGAR / META HUB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#screen-hangar{background:var(--bg2);flex-direction:row;gap:0;align-items:stretch;justify-content:stretch;padding:0;}
+.hangar-left{width:220px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;
+  padding:16px 0;background:rgba(0,4,12,.6);}
+.hangar-nav-item{font-family:var(--font-title);font-size:clamp(8px,1vw,11px);letter-spacing:.15em;
+  padding:12px 20px;cursor:pointer;transition:all .15s;color:var(--text2);border-left:3px solid transparent;
+  display:flex;align-items:center;gap:10px;}
+.hangar-nav-item:hover{color:var(--aether);background:var(--aether-glow);}
+.hangar-nav-item.active{color:var(--aether);border-left-color:var(--aether);background:rgba(0,245,255,.05);}
+.hangar-nav-icon{font-size:16px;width:20px;text-align:center;}
+.hangar-center{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;}
+.hangar-right{width:240px;flex-shrink:0;border-left:1px solid var(--border);padding:16px;
+  display:flex;flex-direction:column;gap:14px;background:rgba(0,4,12,.4);}
+.hangar-title{font-family:var(--font-title);font-size:clamp(9px,1.1vw,13px);letter-spacing:.25em;
+  color:var(--aether);margin-bottom:4px;}
+.pilot-portrait{width:100%;aspect-ratio:1;border:1px solid var(--border);display:flex;align-items:center;
+  justify-content:center;background:rgba(0,10,30,.8);position:relative;overflow:hidden;}
+.pilot-name{font-family:var(--font-title);font-size:clamp(10px,1.2vw,14px);letter-spacing:.2em;color:var(--aether);}
+.pilot-stat-row{display:flex;flex-direction:column;gap:3px;}
+.pilot-stat-label{display:flex;justify-content:space-between;align-items:center;}
+.stat-name{font-size:clamp(7px,.85vw,9px);letter-spacing:.1em;opacity:.6;}
+.stat-val{font-size:clamp(8px,.95vw,11px);color:var(--aether);}
+
+/* Mission cards */
+.mission-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.mission-card{background:var(--panel);border:1px solid var(--border);padding:14px;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;}
+.mission-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;
+  background:linear-gradient(90deg,var(--aether),transparent);}
+.mission-card:hover{border-color:var(--aether2);transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,245,255,.1);}
+.mission-card.locked{opacity:.4;pointer-events:none;filter:grayscale(.8);}
+.mission-card.completed::before{background:linear-gradient(90deg,var(--gold),transparent);}
+.mission-card.completed{border-color:rgba(255,184,0,.3);}
+.mission-title{font-family:var(--font-title);font-size:clamp(9px,1.1vw,13px);letter-spacing:.15em;color:var(--aether);}
+.mission-subtitle{font-size:clamp(8px,.9vw,10px);letter-spacing:.2em;color:var(--gold);margin-top:2px;}
+.mission-desc{font-size:clamp(9px,1vw,11px);color:var(--text2);margin-top:8px;line-height:1.6;}
+.mission-tags{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.tag{font-size:clamp(6px,.75vw,8px);letter-spacing:.12em;padding:2px 7px;border:1px solid;opacity:.8;}
+.tag.wave{border-color:rgba(0,245,255,.3);color:var(--aether);}
+.tag.boss{border-color:rgba(255,43,43,.4);color:var(--danger);}
+.tag.reward{border-color:rgba(255,184,0,.3);color:var(--gold);}
+.mission-lock-icon{position:absolute;top:12px;right:12px;font-size:18px;opacity:.5;}
+.mission-check{position:absolute;top:10px;right:10px;color:var(--gold);font-size:14px;}
+
+/* Upgrade shop */
+.upgrade-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.upgrade-card{background:var(--panel);border:1px solid var(--border);padding:12px;cursor:pointer;
+  transition:all .2s;position:relative;}
+.upgrade-card:hover{border-color:var(--aether);box-shadow:0 0 14px rgba(0,245,255,.12);}
+.upgrade-card.owned{border-color:rgba(255,184,0,.4);background:rgba(255,184,0,.03);}
+.upgrade-card.owned::after{content:'INSTALLED';position:absolute;top:6px;right:8px;
+  font-size:7px;letter-spacing:.15em;color:var(--gold);}
+.upgrade-card.locked{opacity:.35;pointer-events:none;}
+.upgrade-icon{font-size:28px;margin-bottom:8px;}
+.upgrade-name{font-family:var(--font-title);font-size:clamp(8px,1vw,11px);letter-spacing:.12em;color:var(--aether);}
+.upgrade-tier{font-size:clamp(6px,.75vw,8px);letter-spacing:.2em;color:var(--text2);margin-top:2px;}
+.upgrade-desc{font-size:clamp(8px,.9vw,10px);color:var(--text2);margin-top:6px;line-height:1.5;}
+.upgrade-cost{font-family:var(--font-title);font-size:clamp(8px,1vw,12px);color:var(--gold);margin-top:8px;}
+.upgrade-cost.free{color:var(--rook);}
+
+/* Codex */
+.codex-entry{background:var(--panel);border:1px solid var(--border);padding:14px;margin-bottom:10px;}
+.codex-title{font-family:var(--font-title);font-size:clamp(9px,1.1vw,13px);letter-spacing:.2em;color:var(--aether);margin-bottom:8px;}
+.codex-text{font-size:clamp(9px,1vw,11px);color:var(--text2);line-height:1.7;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BRIEFING SCREEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#screen-briefing{padding:0;}
+.briefing-wrap{display:grid;grid-template-columns:1fr 340px;width:100%;height:100%;}
+.briefing-main{padding:32px 28px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;border-right:1px solid var(--border);}
+.briefing-side{padding:20px 16px;display:flex;flex-direction:column;gap:14px;background:rgba(0,3,12,.5);}
+.briefing-chapter{font-size:clamp(7px,.85vw,9px);letter-spacing:.5em;color:var(--text2);}
+.briefing-mission-title{font-family:var(--font-title);font-size:clamp(16px,2.5vw,30px);letter-spacing:.2em;color:var(--aether);}
+.briefing-mission-sub{font-family:var(--font-body);font-size:clamp(11px,1.4vw,16px);letter-spacing:.3em;color:var(--gold);margin-top:4px;}
+.briefing-narrative{font-size:clamp(9px,1.1vw,12px);color:var(--text2);line-height:1.8;max-width:600px;}
+.enemy-roster{display:flex;flex-direction:column;gap:8px;}
+.enemy-entry{display:flex;align-items:center;gap:12px;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);}
+.enemy-class{font-family:var(--font-title);font-size:clamp(8px,1vw,11px);letter-spacing:.12em;color:var(--text);}
+.enemy-threat{font-size:clamp(7px,.85vw,9px);color:var(--danger);}
+.obj-list{display:flex;flex-direction:column;gap:6px;}
+.obj-item{display:flex;gap:10px;align-items:flex-start;font-size:clamp(9px,1.05vw,11px);}
+.obj-dot{width:6px;height:6px;border:1px solid var(--aether);margin-top:3px;flex-shrink:0;}
+.obj-dot.danger{border-color:var(--danger);}
+.loadout-row{display:flex;gap:8px;flex-wrap:wrap;}
+.loadout-chip{font-size:clamp(7px,.85vw,9px);letter-spacing:.1em;padding:4px 10px;
+  border:1px solid var(--border);color:var(--aether);background:var(--aether-glow);}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   GAME CANVAS SCREEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#screen-game{padding:0;background:var(--bg);}
+#game-canvas{position:absolute;inset:0;}
+#hud{position:absolute;inset:0;pointer-events:none;z-index:10;}
+
+/* HUD top bar */
+.hud-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;
+  align-items:flex-start;padding:8px 14px 12px;
+  background:linear-gradient(to bottom,rgba(4,6,14,.85),transparent);}
+.hud-pilot-block{display:flex;flex-direction:column;gap:3px;min-width:140px;}
+.hud-pilot-name{font-family:var(--font-title);font-size:clamp(8px,1vw,11px);letter-spacing:.15em;color:var(--aether);}
+.hud-bar-row{display:flex;align-items:center;gap:6px;}
+.hud-bar-lbl{font-size:clamp(6px,.75vw,8px);opacity:.6;width:34px;}
+.hud-bar-track{width:clamp(80px,11vw,130px);height:5px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);overflow:hidden;}
+.hud-bar-num{font-size:clamp(6px,.75vw,8px);opacity:.6;width:24px;text-align:right;}
+.hud-center{text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.hud-score-lbl{font-size:clamp(6px,.75vw,8px);letter-spacing:.25em;opacity:.5;}
+.hud-score-val{font-family:var(--font-title);font-size:clamp(14px,1.8vw,22px);color:var(--gold);
+  text-shadow:0 0 10px var(--gold);}
+.hud-wave-lbl{font-size:clamp(6px,.75vw,8px);letter-spacing:.25em;opacity:.5;}
+.hud-wave-val{font-family:var(--font-title);font-size:clamp(9px,1.1vw,13px);color:var(--lyra);}
+.hud-right{text-align:right;min-width:140px;}
+.hud-hostiles{font-size:clamp(7px,.85vw,9px);opacity:.5;margin-top:2px;}
+
+/* Ability bar */
+.hud-bottom{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;
+  align-items:flex-end;padding:8px;gap:6px;pointer-events:all;
+  background:linear-gradient(to top,rgba(4,6,14,.9),transparent);}
+.ab-slot{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;}
+.ab-key{font-size:clamp(6px,.75vw,8px);color:var(--gold);letter-spacing:.1em;}
+.ab-icon{width:clamp(38px,5.5vw,54px);height:clamp(38px,5.5vw,54px);border:1px solid var(--aether-dim);
+  display:flex;align-items:center;justify-content:center;font-size:clamp(18px,2.5vw,26px);
+  position:relative;transition:all .15s;background:rgba(0,8,20,.6);}
+.ab-icon.ready{border-color:var(--aether);box-shadow:0 0 8px rgba(0,245,255,.2);}
+.ab-icon.cd{border-color:rgba(255,255,255,.15);opacity:.5;}
+.ab-icon.active-ability{border-color:var(--gold);box-shadow:0 0 14px rgba(255,184,0,.4);background:rgba(255,184,0,.08);}
+.ab-cd-mask{position:absolute;inset:0;background:rgba(0,0,0,.65);transform-origin:bottom;transition:transform .08s;}
+.ab-cd-text{position:absolute;bottom:2px;right:3px;font-size:8px;color:var(--text2);}
+.ab-name{font-size:clamp(6px,.7vw,8px);color:var(--text2);letter-spacing:.05em;text-align:center;max-width:56px;}
+.ab-cost{font-size:clamp(5px,.65vw,7px);color:var(--aether2);letter-spacing:.08em;}
+
+/* Minimap */
+.hud-minimap{position:absolute;top:8px;right:8px;width:clamp(90px,9vw,110px);
+  height:clamp(60px,6vw,75px);border:1px solid var(--border);background:rgba(0,0,0,.6);
+  display:none;}/* hidden until wave 3+ */
+
+/* Boss HP bar */
+#boss-bar{position:absolute;top:56px;left:50%;transform:translateX(-50%);
+  display:none;flex-direction:column;align-items:center;gap:3px;min-width:280px;}
+.boss-bar-name{font-family:var(--font-title);font-size:clamp(8px,1vw,11px);letter-spacing:.2em;}
+.boss-bar-track{width:280px;height:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);}
+.boss-bar-fill{height:100%;transition:width .2s;position:relative;}
+.boss-bar-fill::after{content:'';position:absolute;right:0;top:0;width:2px;height:100%;background:#fff;opacity:.5;}
+.boss-bar-pips{display:flex;gap:2px;margin-top:1px;}
+.boss-pip{width:6px;height:4px;background:rgba(255,255,255,.15);}
+.boss-pip.active{background:var(--danger);}
+
+/* Dialogue */
+#dlg-box{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);
+  width:min(580px,88vw);background:rgba(3,7,18,.95);border:1px solid var(--aether-dim);
+  padding:13px 16px;display:none;z-index:20;pointer-events:all;cursor:pointer;}
+#dlg-box::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;background:var(--aether);}
+.dlg-portrait-row{display:flex;gap:10px;align-items:flex-start;}
+.dlg-portrait{width:40px;height:40px;border:1px solid var(--border);display:flex;align-items:center;
+  justify-content:center;font-size:20px;flex-shrink:0;background:rgba(0,10,30,.8);}
+.dlg-content{flex:1;}
+.dlg-speaker{font-family:var(--font-title);font-size:clamp(8px,1vw,11px);letter-spacing:.2em;margin-bottom:4px;}
+.dlg-text{font-size:clamp(10px,1.25vw,13px);line-height:1.55;color:var(--text);}
+.dlg-continue{position:absolute;bottom:7px;right:10px;font-size:clamp(7px,.85vw,9px);
+  color:var(--aether);animation:blink 1s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.15;}}
+
+/* Wave announce */
+#wave-announce{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;z-index:25;opacity:0;transition:opacity .3s;}
+.wa-title{font-family:var(--font-title);font-size:clamp(22px,3.5vw,44px);
+  color:var(--aether);letter-spacing:.3em;text-shadow:0 0 30px var(--aether);}
+.wa-sub{font-family:var(--font-body);font-size:clamp(12px,1.6vw,20px);
+  color:var(--gold);letter-spacing:.4em;margin-top:6px;}
+
+/* Aether flash overlay */
+#aether-flash{position:absolute;inset:0;pointer-events:none;z-index:30;opacity:0;
+  background:radial-gradient(ellipse at center,rgba(0,245,255,.25),transparent 65%);
+  transition:opacity .1s;}
+#danger-flash{position:absolute;inset:0;pointer-events:none;z-index:30;opacity:0;
+  background:rgba(255,30,30,.15);transition:opacity .1s;}
+
+/* Controls hint */
+#ctrl-hint{position:absolute;bottom:68px;right:12px;font-size:clamp(6px,.75vw,8px);
+  color:var(--text2);opacity:.35;line-height:2;text-align:right;pointer-events:none;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   POST-MISSION SCREEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#screen-post{padding:0;}
+.post-wrap{display:grid;grid-template-columns:1fr 320px;width:100%;height:100%;max-width:900px;margin:0 auto;padding:32px 20px;gap:24px;}
+.post-left{display:flex;flex-direction:column;gap:16px;}
+.post-right{display:flex;flex-direction:column;gap:14px;}
+.post-result{font-family:var(--font-title);font-size:clamp(28px,4vw,52px);letter-spacing:.3em;animation:pulse-glow 2s infinite;}
+.post-mission-name{font-family:var(--font-body);font-size:clamp(13px,1.6vw,18px);
+  letter-spacing:.3em;color:var(--gold);margin-top:4px;}
+.post-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.post-stat{background:var(--panel);border:1px solid var(--border);padding:10px 14px;}
+.post-stat-lbl{font-size:clamp(7px,.85vw,9px);letter-spacing:.2em;color:var(--text2);}
+.post-stat-val{font-family:var(--font-title);font-size:clamp(13px,1.6vw,19px);color:var(--aether);margin-top:3px;}
+.post-rewards-list{display:flex;flex-direction:column;gap:6px;}
+.reward-row{display:flex;align-items:center;gap:10px;padding:8px 12px;
+  background:var(--panel);border:1px solid var(--border);}
+.reward-icon{font-size:18px;width:26px;text-align:center;}
+.reward-text{flex:1;font-size:clamp(9px,1.05vw,12px);}
+.reward-val{font-family:var(--font-title);font-size:clamp(10px,1.2vw,14px);color:var(--gold);}
+.rank-display{text-align:center;padding:20px;}
+.rank-letter{font-family:var(--font-title);font-size:clamp(48px,8vw,96px);line-height:1;}
+.rank-label{font-size:clamp(8px,1vw,11px);letter-spacing:.3em;opacity:.6;margin-top:4px;}
+.new-unlock{background:var(--panel);border:1px solid rgba(255,184,0,.3);padding:12px;margin-top:4px;}
+.unlock-title{font-family:var(--font-title);font-size:clamp(8px,1vw,10px);letter-spacing:.2em;color:var(--gold);}
+.unlock-item{font-size:clamp(9px,1.05vw,11px);color:var(--text);margin-top:4px;line-height:1.6;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OVERLAY (GAME OVER / WIN)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#screen-overlay{background:rgba(4,6,14,.92);z-index:50;}
+.overlay-title{font-family:var(--font-title);font-size:clamp(30px,5vw,60px);letter-spacing:.3em;animation:pulse-glow 2s infinite;}
+.overlay-sub{font-family:var(--font-body);font-size:clamp(12px,1.6vw,18px);letter-spacing:.3em;color:var(--text2);margin-top:8px;}
+.overlay-stats{font-size:clamp(10px,1.2vw,13px);line-height:2.2;color:var(--text);opacity:.8;text-align:center;margin:16px 0;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SCROLLBAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.2);}
+::-webkit-scrollbar-thumb{background:var(--aether-dim);}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<!-- ════════════════════════════════
+     TITLE SCREEN
+════════════════════════════════ -->
+<div id="screen-title" class="screen active">
+  <div class="nebula-bg"></div>
+  <div class="star-field" id="sf-title"></div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+    <div class="title-logo pulse">STARFORGE REQUIEM</div>
+    <div class="title-sub">VOLUME I — ASHES &amp; BOUNTIES</div>
+    <div class="title-chapter-tag">CHAPTER 2 : DOGS OF WAR</div>
+    <svg class="float-anim" style="margin:28px 0;filter:drop-shadow(0 0 18px #00f5ff);" width="110" height="130" viewBox="0 0 110 130">
+      <defs><filter id="mglow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <g filter="url(#mglow)" fill="none" stroke="#00f5ff" stroke-width="1.4" opacity=".92">
+        <rect x="38" y="45" width="34" height="38" rx="3"/>
+        <rect x="44" y="33" width="22" height="16" rx="2"/>
+        <line x1="50" y1="37" x2="60" y2="37"/><line x1="48" y1="42" x2="62" y2="42"/>
+        <rect x="17" y="50" width="21" height="9" rx="2"/><rect x="8" y="47" width="11" height="15" rx="2"/>
+        <rect x="72" y="50" width="21" height="9" rx="2"/>
+        <rect x="91" y="44" width="7" height="20" rx="1"/>
+        <line x1="98" y1="48" x2="106" y2="46"/><line x1="98" y1="57" x2="106" y2="59"/>
+        <rect x="40" y="83" width="13" height="26" rx="2"/><rect x="57" y="83" width="13" height="26" rx="2"/>
+        <rect x="36" y="107" width="19" height="7" rx="2"/><rect x="55" y="107" width="19" height="7" rx="2"/>
+        <circle cx="55" cy="64" r="7" stroke="#00f5ff" stroke-width="1.8" opacity=".8"/>
+        <circle cx="55" cy="64" r="3.5" fill="#00f5ff" opacity=".4"/>
+        <polygon points="38,50 32,43 38,47"/><polygon points="72,50 78,43 72,47"/>
+      </g>
+    </svg>
+    <div class="title-menu">
+      <button class="btn lg" onclick="showScreen('hangar')">▶ LAUNCH — NEW CAMPAIGN</button>
+      <button class="btn" onclick="startFromTitle()">⚡ QUICK BATTLE — CH.2 REPLAY</button>
+      <button class="btn" onclick="showCodex()">📖 CODEX &amp; LORE</button>
+      <button class="btn" onclick="showTitleControls()">⌨ CONTROLS</button>
+    </div>
+  </div>
+  <div class="title-credits">STARFORGE REQUIEM © 2XXX — KAEL / SCRAPFANG BUILD v0.9.1</div>
+</div>
+
+<!-- ════════════════════════════════
+     HANGAR HUB
+════════════════════════════════ -->
+<div id="screen-hangar" class="screen">
+  <div class="nebula-bg"></div>
+  <div class="star-field" id="sf-hangar" style="opacity:.4;"></div>
+
+  <!-- LEFT NAV -->
+  <div class="hangar-left" style="position:relative;z-index:1;">
+    <div style="padding:14px 20px 18px;border-bottom:1px solid var(--border);margin-bottom:8px;">
+      <div style="font-family:var(--font-title);font-size:clamp(10px,1.2vw,13px);letter-spacing:.2em;color:var(--aether);">HANGAR — BASE</div>
+      <div style="font-size:clamp(7px,.85vw,9px);color:var(--text2);margin-top:3px;">ASH BELT SECTOR 7</div>
+    </div>
+    <div class="hangar-nav-item active" onclick="hangarTab('missions')" id="nav-missions">
+      <span class="hangar-nav-icon">🎯</span>MISSIONS
+    </div>
+    <div class="hangar-nav-item" onclick="hangarTab('upgrades')" id="nav-upgrades">
+      <span class="hangar-nav-icon">⚙</span>UPGRADES
+    </div>
+    <div class="hangar-nav-item" onclick="hangarTab('mech')" id="nav-mech">
+      <span class="hangar-nav-icon">🤖</span>MECH — SCRAPFANG
+    </div>
+    <div class="hangar-nav-item" onclick="hangarTab('codex')" id="nav-codex">
+      <span class="hangar-nav-icon">📖</span>CODEX
+    </div>
+    <div style="flex:1;"></div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);">
+      <div style="font-size:clamp(7px,.85vw,9px);color:var(--text2);margin-bottom:6px;">BOUNTY CREDITS</div>
+      <div style="font-family:var(--font-title);font-size:clamp(14px,1.8vw,20px);color:var(--gold);" id="credit-display">₿ 0</div>
+    </div>
+    <button class="btn sm danger" style="margin:0 12px 12px;" onclick="showScreen('title')">← TITLE</button>
+  </div>
+
+  <!-- CENTER -->
+  <div class="hangar-center" id="hangar-center" style="position:relative;z-index:1;">
+    <!-- Content injected by JS -->
+  </div>
+
+  <!-- RIGHT — PILOT INFO -->
+  <div class="hangar-right" style="position:relative;z-index:1;">
+    <div class="hangar-title">PILOT</div>
+    <div class="pilot-portrait" id="pilot-portrait">
+      <svg width="80" height="100" viewBox="0 0 80 100" fill="none" stroke="#00f5ff" stroke-width="1.2">
+        <circle cx="40" cy="22" r="14"/>
+        <line x1="40" y1="36" x2="40" y2="65"/>
+        <line x1="40" y1="44" x2="22" y2="58"/>
+        <line x1="40" y1="44" x2="58" y2="58"/>
+        <line x1="40" y1="65" x2="28" y2="85"/>
+        <line x1="40" y1="65" x2="52" y2="85"/>
+        <circle cx="40" cy="22" r="6" fill="rgba(0,245,255,.15)"/>
+        <rect x="33" y="17" width="14" height="6" rx="1" fill="rgba(0,245,255,.1)"/>
+      </svg>
+      <div style="position:absolute;bottom:6px;font-size:8px;letter-spacing:.15em;color:var(--aether);opacity:.7;">KAEL — DRIFTER</div>
+    </div>
+    <div class="pilot-name">KAEL</div>
+    <div style="font-size:clamp(7px,.85vw,9px);color:var(--text2);margin-top:1px;letter-spacing:.15em;">CLASS: DRIFTER / PILOT</div>
+    <div class="divider"></div>
+    <div style="display:flex;flex-direction:column;gap:8px;" id="pilot-stats-panel">
+      <div class="pilot-stat-row">
+        <div class="pilot-stat-label"><span class="stat-name">HULL INTEGRITY</span><span class="stat-val" id="ps-hp">100</span></div>
+        <div class="bar-track"><div class="bar-fill bar-hp" id="pb-hp" style="width:100%"></div></div>
+      </div>
+      <div class="pilot-stat-row">
+        <div class="pilot-stat-label"><span class="stat-name">AETHER CAPACITY</span><span class="stat-val" id="ps-ae">30/100</span></div>
+        <div class="bar-track"><div class="bar-fill bar-ae" id="pb-ae" style="width:30%"></div></div>
+      </div>
+      <div class="pilot-stat-row">
+        <div class="pilot-stat-label"><span class="stat-name">PILOT XP</span><span class="stat-val" id="ps-xp">0</span></div>
+        <div class="bar-track"><div class="bar-fill bar-xp" id="pb-xp" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:clamp(7px,.85vw,9px);letter-spacing:.12em;color:var(--text2);line-height:1.7;" id="pilot-passive-list">
+      <div style="color:var(--aether);margin-bottom:4px;font-family:var(--font-title);font-size:8px;letter-spacing:.2em;">PASSIVES</div>
+      <div>▸ SCRAP ADAPTABILITY</div>
+      <div>▸ UNSTABLE AETHER CORE</div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:clamp(7px,.85vw,9px);color:var(--text2);" id="story-progress-panel">
+      <div style="color:var(--gold);font-family:var(--font-title);font-size:8px;letter-spacing:.2em;margin-bottom:5px;">STORY PROGRESS</div>
+      <div id="story-flags-list" style="line-height:1.9;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     MISSION BRIEFING
+════════════════════════════════ -->
+<div id="screen-briefing" class="screen">
+  <div class="nebula-bg"></div>
+  <div class="star-field" id="sf-briefing" style="opacity:.3;"></div>
+  <div class="briefing-wrap" style="position:relative;z-index:1;height:100%;">
+    <div class="briefing-main">
+      <div>
+        <div class="briefing-chapter" id="br-chapter">CHAPTER 2 — DOGS OF WAR</div>
+        <div class="briefing-mission-title" id="br-title">ASH BELT PATROL</div>
+        <div class="briefing-mission-sub" id="br-sub">WAVE 1 OF 6</div>
+      </div>
+      <div class="divider"></div>
+      <div class="briefing-narrative" id="br-narrative"></div>
+      <div>
+        <div class="sec-label">OBJECTIVES</div>
+        <div class="obj-list" id="br-objectives"></div>
+      </div>
+      <div>
+        <div class="sec-label">THREAT ROSTER</div>
+        <div class="enemy-roster" id="br-enemies"></div>
+      </div>
+      <div>
+        <div class="sec-label">ACTIVE LOADOUT</div>
+        <div class="loadout-row" id="br-loadout"></div>
+      </div>
+    </div>
+    <div class="briefing-side">
+      <div style="font-family:var(--font-title);font-size:clamp(10px,1.2vw,14px);letter-spacing:.2em;color:var(--aether);">INTEL SUMMARY</div>
+      <div style="font-size:clamp(8px,.95vw,10px);color:var(--text2);line-height:1.8;" id="br-intel"></div>
+      <div class="divider"></div>
+      <div style="font-size:clamp(8px,.9vw,10px);color:var(--text2);">
+        <div style="color:var(--gold);font-family:var(--font-title);font-size:8px;letter-spacing:.2em;margin-bottom:6px;">POTENTIAL REWARDS</div>
+        <div id="br-rewards" style="line-height:1.8;"></div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto;">
+        <button class="btn lg gold" id="br-launch-btn" onclick="launchMission()">▶ ENGAGE MISSION</button>
+        <button class="btn" onclick="showScreen('hangar')">← ABORT / HANGAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     GAME SCREEN
+════════════════════════════════ -->
+<div id="screen-game" class="screen">
+  <canvas id="game-canvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-top">
+      <div class="hud-pilot-block">
+        <div class="hud-pilot-name">KAEL — SCRAPFANG</div>
+        <div class="hud-bar-row">
+          <span class="hud-bar-lbl">HULL</span>
+          <div class="hud-bar-track"><div class="bar-fill bar-hp" id="hud-hp" style="width:100%"></div></div>
+          <span class="hud-bar-num" id="hud-hp-n">100</span>
+        </div>
+        <div class="hud-bar-row">
+          <span class="hud-bar-lbl">AETHER</span>
+          <div class="hud-bar-track"><div class="bar-fill bar-ae" id="hud-ae" style="width:30%"></div></div>
+          <span class="hud-bar-num" id="hud-ae-n">30</span>
+        </div>
+        <div class="hud-bar-row">
+          <span class="hud-bar-lbl">SHIELD</span>
+          <div class="hud-bar-track"><div class="bar-fill bar-shield" id="hud-sh" style="width:0%"></div></div>
+          <span class="hud-bar-num" id="hud-sh-n">0</span>
+        </div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-score-lbl">BOUNTY CREDITS</div>
+        <div class="hud-score-val" id="hud-score">₿ 0</div>
+        <div class="hud-wave-lbl" style="margin-top:4px;">CURRENT WAVE</div>
+        <div class="hud-wave-val" id="hud-wave">ASH BELT — 1</div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-wave-lbl">HOSTILES</div>
+        <div class="hud-hostiles" id="hud-hostiles">0 REMAINING</div>
+        <div style="margin-top:8px;font-size:clamp(7px,.85vw,9px);color:var(--text2);" id="hud-status"></div>
+      </div>
+    </div>
+
+    <!-- Boss bar -->
+    <div id="boss-bar">
+      <div class="boss-bar-name" id="boss-bar-name"></div>
+      <div class="boss-bar-track"><div class="boss-bar-fill" id="boss-bar-fill" style="width:100%"></div></div>
+      <div class="boss-bar-pips" id="boss-bar-pips"></div>
+    </div>
+
+    <!-- Abilities -->
+    <div class="hud-bottom">
+      <div class="ab-slot" onclick="useAbility(0)" title="Rapid Fire">
+        <div class="ab-key">Z/SPC</div>
+        <div class="ab-icon ready" id="ab0">🔫<div class="ab-cd-mask" id="cdm0" style="transform:scaleY(0)"></div></div>
+        <div class="ab-name">RAPID FIRE</div>
+        <div class="ab-cost" id="abcost0">FREE</div>
+      </div>
+      <div class="ab-slot" onclick="useAbility(1)" title="Boost Dash">
+        <div class="ab-key">X</div>
+        <div class="ab-icon ready" id="ab1">⚡<div class="ab-cd-mask" id="cdm1" style="transform:scaleY(0)"></div></div>
+        <div class="ab-name">BOOST DASH</div>
+        <div class="ab-cost" id="abcost1">15 AE</div>
+      </div>
+      <div class="ab-slot" onclick="useAbility(2)" title="Aether Sync">
+        <div class="ab-key">C</div>
+        <div class="ab-icon ready" id="ab2">🌀<div class="ab-cd-mask" id="cdm2" style="transform:scaleY(0)"></div></div>
+        <div class="ab-name">AETHER SYNC</div>
+        <div class="ab-cost" id="abcost2">30 AE</div>
+      </div>
+      <div class="ab-slot" onclick="useAbility(3)" title="Overdrive">
+        <div class="ab-key">V</div>
+        <div class="ab-icon ready" id="ab3">💥<div class="ab-cd-mask" id="cdm3" style="transform:scaleY(0)"></div></div>
+        <div class="ab-name">OVERDRIVE</div>
+        <div class="ab-cost" id="abcost3">50 AE</div>
+      </div>
+      <div class="ab-slot" onclick="useAbility(4)" title="Shock Net">
+        <div class="ab-key">B</div>
+        <div class="ab-icon" id="ab4" style="opacity:.35;">🕸<div class="ab-cd-mask" id="cdm4" style="transform:scaleY(0)"></div></div>
+        <div class="ab-name">SHOCK NET</div>
+        <div class="ab-cost" id="abcost4">20 AE</div>
+      </div>
+    </div>
+
+    <div id="ctrl-hint">WASD/ARROWS — MOVE &nbsp; Z/SPC — FIRE<br>X — DASH &nbsp; C — AETHER SYNC &nbsp; V — OVERDRIVE &nbsp; B — SHOCK NET</div>
+  </div>
+
+  <!-- Dialogue -->
+  <div id="dlg-box" onclick="advanceDlg()">
+    <div class="dlg-portrait-row">
+      <div class="dlg-portrait" id="dlg-portrait">❓</div>
+      <div class="dlg-content">
+        <div class="dlg-speaker" id="dlg-speaker"></div>
+        <div class="dlg-text" id="dlg-text"></div>
+      </div>
+    </div>
+    <div class="dlg-continue">▼ TAP TO CONTINUE</div>
+  </div>
+
+  <div id="wave-announce">
+    <div class="wa-title" id="wa-title"></div>
+    <div class="wa-sub" id="wa-sub"></div>
+  </div>
+
+  <div id="aether-flash"></div>
+  <div id="danger-flash"></div>
+</div>
+
+<!-- ════════════════════════════════
+     POST-MISSION
+════════════════════════════════ -->
+<div id="screen-post" class="screen">
+  <div class="nebula-bg"></div>
+  <div class="star-field" id="sf-post" style="opacity:.4;"></div>
+  <div class="post-wrap" style="position:relative;z-index:1;">
+    <div class="post-left">
+      <div>
+        <div class="post-result" id="post-result">MISSION CLEAR</div>
+        <div class="post-mission-name" id="post-mission-name"></div>
+      </div>
+      <div class="post-stat-grid" id="post-stats"></div>
+      <div>
+        <div class="sec-label">REWARDS EARNED</div>
+        <div class="post-rewards-list" id="post-rewards"></div>
+      </div>
+      <div class="new-unlock" id="post-unlock" style="display:none;">
+        <div class="unlock-title">🔓 NEW UNLOCKS</div>
+        <div class="unlock-item" id="post-unlock-text"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+        <button class="btn lg gold" onclick="goToShop()">⚙ UPGRADE HANGAR</button>
+        <button class="btn lg" onclick="nextMission()">▶ NEXT MISSION</button>
+        <button class="btn" onclick="showScreen('hangar')">🏠 HANGAR</button>
+      </div>
+    </div>
+    <div class="post-right">
+      <div class="rank-display card">
+        <div class="rank-letter" id="post-rank" style="color:var(--aether);">A</div>
+        <div class="rank-label">MISSION RANK</div>
+      </div>
+      <div class="card">
+        <div class="sec-label" style="margin-bottom:8px;">PILOT DEBRIEF</div>
+        <div style="font-size:clamp(9px,1.05vw,11px);color:var(--text2);line-height:1.8;" id="post-debrief"></div>
+      </div>
+      <div class="card">
+        <div class="sec-label" style="margin-bottom:8px;">STORY UPDATE</div>
+        <div style="font-size:clamp(9px,1.05vw,11px);color:var(--text2);line-height:1.8;" id="post-story-update"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     GAME OVER / WIN OVERLAY
+════════════════════════════════ -->
+<div id="screen-overlay" class="screen">
+  <div class="nebula-bg"></div>
+  <div class="overlay-title" id="ov-title">HULL BREACH</div>
+  <div class="overlay-sub" id="ov-sub">MISSION FAILED</div>
+  <div class="overlay-stats" id="ov-stats"></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+    <button class="btn lg gold" onclick="retryMission()">↻ RETRY MISSION</button>
+    <button class="btn lg" onclick="showScreen('hangar')">🏠 RETURN TO HANGAR</button>
+    <button class="btn" onclick="showScreen('title')">← TITLE</button>
+  </div>
+</div>
+
+</body>
+</html>
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  STARFORGE REQUIEM — COMPLETE GAME ENGINE
+// ══════════════════════════════════════════════════════════════════
+
+// ── SAVE STATE ──────────────────────────────────────────────────
+const SAVE = {
+  credits: 0, xp: 0, level: 1,
+  maxHp: 100, maxAether: 100, shield: 0,
+  speed: 4, fireDmg: 8, fireRate: 8,
+  upgrades: [],
+  missionsComplete: [],
+  currentMission: 0,
+  storyFlags: [],
+  passives: ['SCRAP_ADAPTABILITY'],
+  totalKills: 0, totalDeaths: 0, highScore: 0
+};
+
+const XP_PER_LEVEL = 200;
+
+// ── SCREEN ROUTER ────────────────────────────────────────────────
+let currentScreen = 'title';
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  currentScreen = id;
+  if (id === 'hangar') refreshHangar();
+}
+
+// ── STAR FIELDS ──────────────────────────────────────────────────
+function makeStars(containerId, count = 100) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.5 + 0.3;
+    const lo = (Math.random() * 0.3 + 0.05).toFixed(2);
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --d:${(Math.random()*3+1.2).toFixed(1)}s;--lo:${lo};animation-delay:${(Math.random()*4).toFixed(1)}s;`;
+    c.appendChild(s);
+  }
+}
+['sf-title','sf-hangar','sf-briefing','sf-post'].forEach(id => makeStars(id));
+
+// ── MISSION DEFINITIONS ──────────────────────────────────────────
+const MISSIONS = [
+  {
+    id: 0, chapter: 'CHAPTER 2 — DOGS OF WAR', title: 'ASH BELT PATROL', sub: 'DOMINION SWEEP — SECTOR 7',
+    narrative: 'Rook\'s intel tagged a Dominion patrol route cutting through Scrapfang\'s usual salvage corridor. Standard procedure: avoid and survive. But the Ash Belt has a way of turning routine into chaos.',
+    objectives: [
+      { text: 'Survive the Dominion patrol sweep', danger: false },
+      { text: 'Eliminate all hostile mechs', danger: false },
+      { text: 'Do not let Scrapfang\'s core reach critical', danger: true }
+    ],
+    enemies: [
+      { type: 'scout', label: 'DOMINION SCOUT', threat: 'LOW', count: 3 },
+      { type: 'gunship', label: 'DOMINION GUNSHIP', threat: 'MEDIUM', count: 2 }
+    ],
+    intel: 'Dominion scouts run light armor, high speed. Gunships fire in tight patterns. Keep moving — static mechs get tagged fast in the belt.',
+    rewards: '₿ 400 — 80 XP — UNLOCK: TIER 1 UPGRADES',
+    waves: [
+      { label:'WAVE 1',sub:'PATROL SWEEP',list:['scout','scout','scout'] },
+      { label:'WAVE 2',sub:'GUNSHIP BACKUP',list:['gunship','scout','gunship'] },
+    ],
+    rewardCredits: 400, rewardXP: 80,
+    unlocks: ['upgrade_reinforce_armor','upgrade_boost_mk2'],
+    storyUnlock: 'DOMINION_CONTACT',
+    postDebrief: 'First Dominion contact logged. They\'re using the belt as a patrol lane now — Rook says the frequency is increasing. Something\'s being hunted.',
+    postStory: 'Rook files the encounter and notices the patrol route doesn\'t match standard Dominion procedure. Someone gave them a specific search vector.'
+  },
+  {
+    id: 1, chapter: 'CHAPTER 2 — DOGS OF WAR', title: 'INTERCEPT AT WAYPOINT 9', sub: 'BOUNTY FLAG DETECTED',
+    narrative: 'A Dominion signal intercepted near the debris field. They\'re not just patrolling — they\'re broadcasting something. A target flag. Rook runs the signature and goes quiet.',
+    objectives: [
+      { text: 'Destroy the signal interceptors', danger: false },
+      { text: 'Intercept Dominion transmission data', danger: false },
+      { text: 'Survive — someone else is listening', danger: true }
+    ],
+    enemies: [
+      { type: 'interceptor', label: 'DOMINION INTERCEPTOR', threat: 'MEDIUM', count: 3 },
+      { type: 'gunship', label: 'DOMINION GUNSHIP', threat: 'MEDIUM', count: 2 }
+    ],
+    intel: 'Interceptors run dive patterns — they\'ll come directly at Scrapfang. Boost Dash is essential. The transmission data drops when the gunships are destroyed.',
+    rewards: '₿ 600 — 120 XP — UNLOCK: SHOCK NET / AETHER UPGRADE',
+    waves: [
+      { label:'INTERCEPT',sub:'SIGNAL DESTROYERS',list:['interceptor','interceptor','gunship'] },
+      { label:'BACKUP',sub:'DOMINION RESPONSE',list:['gunship','interceptor','scout','interceptor'] },
+    ],
+    rewardCredits: 600, rewardXP: 120,
+    unlocks: ['upgrade_aether_amplifier','upgrade_shock_net'],
+    storyUnlock: 'BOUNTY_FLAG_KAEL',
+    postDebrief: 'The transmission was a high-priority flag. Kael\'s mech signature — specifically the Aether core anomaly — is being broadcast across the belt.',
+    postStory: 'Rook decrypts the flag: "UNKNOWN DRIFTER — AETHER ANOMALY — EXTREME VALUE." The Dominion didn\'t generate it. Someone else did — and patched it into their comms.'
+  },
+  {
+    id: 2, chapter: 'CHAPTER 2 — DOGS OF WAR', title: 'DOGS OF WAR', sub: 'THREE-WAY COLLISION',
+    narrative: 'It happens all at once. Lyra Voss — Dominion Commander — locks onto Scrapfang with a precision beam. Then a black-red blur warps in. Jin "Flux" Arashi. Bounty hunter. He\'s already looked up the price.',
+    objectives: [
+      { text: 'Survive the Dominion beam assault', danger: true },
+      { text: 'Escape from Jin Arashi', danger: true },
+      { text: 'Do NOT engage Lyra directly — escape only', danger: true }
+    ],
+    enemies: [
+      { type: 'jin', label: 'JIN "FLUX" ARASHI', threat: '★★★ EXTREME', count: 1 },
+      { type: 'lyra', label: 'CDR. LYRA VOSS', threat: '★★★★ CRITICAL', count: 1 }
+    ],
+    intel: 'Jin teleports — Aether Sync is your best counter. Lyra fires precision beams in pairs — dodge vertically. Both want you alive or neutralized. Your Aether core is the prize.',
+    rewards: '₿ 1200 — 300 XP — UNLOCK: OVERDRIVE SYSTEM / AETHER FRAME',
+    waves: [
+      { label:'FIRST CONTACT',sub:'LYRA ENGAGES',list:['lyra'] },
+      { label:'JACKPOT',sub:'JIN ARRIVES',list:['lyra','jin'], bossWave: true },
+    ],
+    rewardCredits: 1200, rewardXP: 300,
+    unlocks: ['upgrade_aether_frame','upgrade_overdrive_mod','upgrade_neural_link'],
+    storyUnlock: 'LYRA_AND_JIN_ENCOUNTERED',
+    isBossChapter: true,
+    postDebrief: 'Aether Sync triggered instinctively inside Lyra\'s beam. Slipped the blast window by milliseconds. Jin matched every move until Overdrive pushed him back. Both disengaged.',
+    postStory: 'Lyra files the anomaly: "Subject demonstrates unprogrammed Aether resonance. Core designation unknown. Not Dominion tech. Flag for extraction." Jin uploads the bounty price revision: double.'
+  },
+  {
+    id: 3, chapter: 'CHAPTER 2 — DOGS OF WAR', title: 'ESCAPE FROM THE BELT', sub: 'ROOK\'S EXTRACTION RUN',
+    narrative: 'Scrapfang is barely holding. Rook is running the extraction corridor but Dominion has sealed the exit lanes. Kael has to blast through before the hull gives out.',
+    objectives: [
+      { text: 'Clear the extraction corridor', danger: false },
+      { text: 'Protect Rook\'s ship from damage', danger: true },
+      { text: 'Reach the jump point before hull hits critical', danger: true }
+    ],
+    enemies: [
+      { type: 'gunship', label: 'DOMINION GUNSHIP', threat: 'MEDIUM', count: 4 },
+      { type: 'interceptor', label: 'DOMINION INTERCEPTOR', threat: 'MEDIUM', count: 3 },
+      { type: 'scout', label: 'DOMINION SCOUT', threat: 'LOW', count: 4 }
+    ],
+    intel: 'Three waves. Rook\'s ship trails behind — don\'t let enemies get past you. Shock Net is ideal for holding groups. Move fast.',
+    rewards: '₿ 800 — 150 XP — CHAPTER 2 COMPLETE',
+    waves: [
+      { label:'BREAK OUT',sub:'CORRIDOR BREACH',list:['gunship','interceptor','scout','scout'] },
+      { label:'PUSH THROUGH',sub:'DOMINION PURSUIT',list:['interceptor','gunship','interceptor','gunship'] },
+      { label:'JUMP POINT',sub:'FINAL PUSH',list:['scout','scout','gunship','interceptor','scout'] },
+    ],
+    rewardCredits: 800, rewardXP: 150,
+    unlocks: ['upgrade_scrapfang_mk2','upgrade_mag_claw'],
+    storyUnlock: 'CHAPTER_2_COMPLETE',
+    postDebrief: 'Made the jump. Scrapfang\'s core vented heat for three hours straight. Rook says the Aether signature is getting stronger after each sync event.',
+    postStory: 'Rook looks at the destroyed mech bay: "You picked a fight with the Dominion?" Kael collapses from the cockpit. "I didn\'t pick it." Rook nods slowly. "They picked you."'
+  }
+];
+
+// ── UPGRADE DEFINITIONS ──────────────────────────────────────────
+const UPGRADES = [
+  { id:'upgrade_reinforce_armor', tier:'TIER 1', icon:'🛡', name:'REINFORCED SCRAP ARMOR', desc:'Increase max hull by 25. Slower movement but better durability.', cost:200, effect:{ maxHp:25 }, unlockFrom: null },
+  { id:'upgrade_boost_mk2', tier:'TIER 1', icon:'⚡', name:'BOOST THRUSTERS MK II', desc:'Dash distance +50%. Dash cooldown -20 frames.', cost:180, effect:{ dashBonus:true }, unlockFrom: null },
+  { id:'upgrade_aether_amplifier', tier:'TIER 2', icon:'💠', name:'AETHER AMPLIFIER', desc:'Max Aether +30. Passive regen rate doubled.', cost:350, effect:{ maxAether:30 }, unlockFrom:'upgrade_boost_mk2' },
+  { id:'upgrade_shock_net', tier:'TIER 2', icon:'🕸', name:'SHOCK NET LAUNCHER', desc:'Unlocks Shock Net ability — stuns nearby enemies for 2 seconds. Non-lethal capture mode.', cost:400, effect:{ unlockShockNet:true }, unlockFrom:'upgrade_reinforce_armor' },
+  { id:'upgrade_aether_frame', tier:'TIER 3', icon:'🌀', name:'AETHER SYNC FRAME', desc:'Neural link initiated. Aether Sync cooldown -40 frames. Aether cost -10.', cost:600, effect:{ aeSync:true }, unlockFrom:'upgrade_aether_amplifier' },
+  { id:'upgrade_overdrive_mod', tier:'TIER 3', icon:'🔥', name:'OVERDRIVE STABILIZER', desc:'Overdrive duration +100 frames. Instability side-effects reduced.', cost:600, effect:{ overdriveExt:true }, unlockFrom:'upgrade_aether_amplifier' },
+  { id:'upgrade_neural_link', tier:'TIER 3', icon:'🧠', name:'NEURAL LINK v0.1', desc:'Mech responds to emotional state. Passive: gain +2 Aether per kill. Core sync improves.', cost:700, effect:{ neuralLink:true }, unlockFrom:'upgrade_aether_frame' },
+  { id:'upgrade_mag_claw', tier:'TIER 2', icon:'🦾', name:'MAG-CLAW GRIP SYSTEM', desc:'Allows debris field climbing. Ambush bonus: +50% damage when attacking from cover zones.', cost:300, effect:{ magClaw:true }, unlockFrom:'upgrade_reinforce_armor' },
+  { id:'upgrade_scrapfang_mk2', tier:'TIER 4', icon:'🤖', name:'SCRAPFANG MK2 FRAME', desc:'Full frame overhaul. +30 max hull, +20 max aether, +0.5 base speed. New visual.', cost:1200, effect:{ maxHp:30, maxAether:20, speed:0.5, mk2Frame:true }, unlockFrom:'upgrade_neural_link' },
+  { id:'upgrade_modular_arms', tier:'TIER 2', icon:'🔧', name:'MODULAR WEAPON ARMS', desc:'Swap between blade/rifle/stun mid-combat. Damage type variety bonus.', cost:450, effect:{ modularArms:true }, unlockFrom:'upgrade_boost_mk2' },
+];
+
+// ── HANGAR TABS ──────────────────────────────────────────────────
+let activeHangarTab = 'missions';
+function hangarTab(tab) {
+  activeHangarTab = tab;
+  document.querySelectorAll('.hangar-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-' + tab)?.classList.add('active');
+  renderHangarTab(tab);
+}
+
+function refreshHangar() {
+  document.getElementById('credit-display').textContent = '₿ ' + SAVE.credits.toLocaleString();
+  updatePilotPanel();
+  renderHangarTab(activeHangarTab);
+}
+
+function updatePilotPanel() {
+  document.getElementById('ps-hp').textContent = SAVE.maxHp;
+  document.getElementById('pb-hp').style.width = (SAVE.maxHp / 200 * 100) + '%';
+  document.getElementById('ps-ae').textContent = SAVE.maxAether + '/100+';
+  document.getElementById('pb-ae').style.width = (SAVE.maxAether / 150 * 100) + '%';
+  const xpPct = ((SAVE.xp % XP_PER_LEVEL) / XP_PER_LEVEL * 100);
+  document.getElementById('ps-xp').textContent = 'LV' + SAVE.level + ' — ' + SAVE.xp + ' XP';
+  document.getElementById('pb-xp').style.width = xpPct + '%';
+
+  // Passives list
+  const passiveNames = {
+    SCRAP_ADAPTABILITY: '▸ SCRAP ADAPTABILITY',
+    NEURAL_LINK: '▸ NEURAL LINK — ACTIVE',
+    AETHER_REGEN_BOOST: '▸ ENHANCED AETHER REGEN',
+    MAG_CLAW_BONUS: '▸ MAG-CLAW AMBUSH BONUS',
+    MODULAR_ARMS: '▸ MODULAR WEAPON SYSTEMS',
+  };
+  let passiveHtml = '<div style="color:var(--aether);margin-bottom:4px;font-family:var(--font-title);font-size:8px;letter-spacing:.2em;">PASSIVES</div>';
+  SAVE.passives.forEach(p => {
+    passiveHtml += '<div>' + (passiveNames[p] || '▸ ' + p) + '</div>';
+  });
+  document.getElementById('pilot-passive-list').innerHTML = passiveHtml;
+
+  // Story flags
+  const flagLabels = {
+    DOMINION_CONTACT: '✓ First Dominion contact logged',
+    BOUNTY_FLAG_KAEL: '✓ Bounty flag on Kael detected',
+    LYRA_AND_JIN_ENCOUNTERED: '✓ Lyra Voss + Jin Arashi: encountered',
+    CHAPTER_2_COMPLETE: '✓ CHAPTER 2 — COMPLETE',
+  };
+  let flagHtml = '';
+  if (SAVE.storyFlags.length === 0) flagHtml = '<span style="opacity:.4;">No flags yet.</span>';
+  else SAVE.storyFlags.forEach(f => { flagHtml += '<div>' + (flagLabels[f] || '✓ ' + f) + '</div>'; });
+  document.getElementById('story-flags-list').innerHTML = flagHtml;
+}
+
+function renderHangarTab(tab) {
+  const c = document.getElementById('hangar-center');
+  if (tab === 'missions') {
+    let html = '<div style="font-family:var(--font-title);font-size:clamp(11px,1.3vw,15px);letter-spacing:.2em;color:var(--aether);margin-bottom:16px;">MISSION SELECT — CHAPTER 2</div>';
+    html += '<div class="mission-grid">';
+    MISSIONS.forEach((m, i) => {
+      const done = SAVE.missionsComplete.includes(m.id);
+      const locked = i > 0 && !SAVE.missionsComplete.includes(MISSIONS[i-1].id);
+      html += `<div class="mission-card ${done?'completed':''} ${locked?'locked':''}" onclick="selectMission(${m.id})">
+        ${done ? '<div class="mission-check">★</div>' : ''}
+        ${locked ? '<div class="mission-lock-icon">🔒</div>' : ''}
+        <div class="mission-title">${m.title}</div>
+        <div class="mission-subtitle">${m.sub}</div>
+        <div class="mission-desc">${m.narrative.substring(0,100)}...</div>
+        <div class="mission-tags">
+          <span class="tag wave">${m.waves.length} WAVES</span>
+          ${m.isBossChapter ? '<span class="tag boss">BOSS</span>' : ''}
+          <span class="tag reward">${m.rewardCredits} ₿</span>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+    c.innerHTML = html;
+  }
+  else if (tab === 'upgrades') {
+    let html = '<div style="font-family:var(--font-title);font-size:clamp(11px,1.3vw,15px);letter-spacing:.2em;color:var(--aether);margin-bottom:4px;">UPGRADE WORKSHOP</div>';
+    html += '<div style="font-size:clamp(8px,.95vw,10px);color:var(--text2);margin-bottom:14px;">Select upgrades to install on Scrapfang. Credits: <span style="color:var(--gold)">₿ ' + SAVE.credits + '</span></div>';
+    html += '<div class="upgrade-grid">';
+    UPGRADES.forEach(u => {
+      const owned = SAVE.upgrades.includes(u.id);
+      const prereqMet = !u.unlockFrom || SAVE.upgrades.includes(u.unlockFrom);
+      const canAfford = SAVE.credits >= u.cost;
+      const locked = !prereqMet;
+      html += `<div class="upgrade-card ${owned?'owned':''} ${locked?'locked':''}" onclick="${!owned && prereqMet ? 'buyUpgrade("'+u.id+'")' : ''}">
+        <div class="upgrade-icon">${u.icon}</div>
+        <div class="upgrade-name">${u.name}</div>
+        <div class="upgrade-tier">${u.tier}</div>
+        <div class="upgrade-desc">${u.desc}</div>
+        <div class="upgrade-cost ${owned?'free':''}">${owned ? 'INSTALLED' : (u.unlockFrom && !prereqMet ? '🔒 LOCKED' : '₿ '+u.cost)}</div>
+      </div>`;
+    });
+    html += '</div>';
+    c.innerHTML = html;
+  }
+  else if (tab === 'mech') {
+    const mk2 = SAVE.upgrades.includes('upgrade_scrapfang_mk2');
+    const html = `
+    <div style="font-family:var(--font-title);font-size:clamp(11px,1.3vw,15px);letter-spacing:.2em;color:var(--aether);margin-bottom:14px;">SCRAPFANG — ${mk2?'MK2 FRAME':'BASE UNIT'}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="sec-label" style="margin-bottom:10px;">CURRENT STATS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:clamp(9px,1.05vw,11px);">
+          <div class="hud-bar-row"><span style="width:120px;opacity:.6;">MAX HULL</span><span style="color:var(--aether)">${SAVE.maxHp}</span></div>
+          <div class="hud-bar-row"><span style="width:120px;opacity:.6;">MAX AETHER</span><span style="color:var(--aether)">${SAVE.maxAether}</span></div>
+          <div class="hud-bar-row"><span style="width:120px;opacity:.6;">SHIELD</span><span style="color:var(--aether)">${SAVE.shield}</span></div>
+          <div class="hud-bar-row"><span style="width:120px;opacity:.6;">SPEED</span><span style="color:var(--aether)">${SAVE.speed.toFixed(1)}</span></div>
+          <div class="hud-bar-row"><span style="width:120px;opacity:.6;">FIRE DMG</span><span style="color:var(--aether)">${SAVE.fireDmg}</span></div>
+          <div class="hud-bar-row"><span style="width:120px;opacity:.6;">UPGRADES</span><span style="color:var(--gold)">${SAVE.upgrades.length} / ${UPGRADES.length}</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-label" style="margin-bottom:10px;">UPGRADE PATH</div>
+        <div style="font-size:clamp(8px,.9vw,10px);color:var(--text2);line-height:1.9;">
+          <div style="color:${SAVE.upgrades.includes('upgrade_reinforce_armor')?'var(--gold)':'var(--text2)'};">TIER 1 — SCAVENGER BUILD ${SAVE.upgrades.filter(u=>['upgrade_reinforce_armor','upgrade_boost_mk2','upgrade_mag_claw'].includes(u)).length}/3</div>
+          <div style="color:${SAVE.upgrades.includes('upgrade_aether_amplifier')?'var(--gold)':'var(--text2)'};">TIER 2 — DRIFTER COMBAT ${SAVE.upgrades.filter(u=>['upgrade_aether_amplifier','upgrade_shock_net','upgrade_modular_arms'].includes(u)).length}/3</div>
+          <div style="color:${SAVE.upgrades.includes('upgrade_aether_frame')?'var(--gold)':'var(--text2)'};">TIER 3 — AETHER SYNC FRAME ${SAVE.upgrades.filter(u=>['upgrade_aether_frame','upgrade_overdrive_mod','upgrade_neural_link'].includes(u)).length}/3</div>
+          <div style="color:${SAVE.upgrades.includes('upgrade_scrapfang_mk2')?'var(--gold)':'var(--text2)'};">TIER 4 — STARFORGE PROTO ${SAVE.upgrades.includes('upgrade_scrapfang_mk2')?'1':'0'}/1</div>
+        </div>
+      </div>
+      <div class="card" style="grid-column:1/-1;">
+        <div class="sec-label" style="margin-bottom:8px;">INSTALLED UPGRADES</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${SAVE.upgrades.length === 0 ? '<span style="opacity:.4;font-size:10px;">None installed.</span>' : 
+            SAVE.upgrades.map(uid => {
+              const u = UPGRADES.find(x=>x.id===uid);
+              return u ? `<div style="border:1px solid rgba(255,184,0,.3);padding:4px 10px;font-size:clamp(7px,.85vw,9px);color:var(--gold);">${u.icon} ${u.name}</div>` : '';
+            }).join('')}
+        </div>
+      </div>
+    </div>`;
+    c.innerHTML = html;
+  }
+  else if (tab === 'codex') {
+    const entries = [
+      { title:'SCRAPFANG', text:'A salvaged junk-frame mech of unknown original designation. Kael\'s modifications have given it unusual structural flexibility — components from at least eight different mech classes are fused into the frame. The Aether core is the anomaly. No one knows why it\'s there, or why it responds to Kael\'s emotional state.' },
+      { title:'THE AETHER CORE', text:'A crystallized energy matrix found embedded in Scrapfang\'s frame. It pre-dates the mech itself. Dominion scientists have theorized that Aether cores are remnants of pre-war research into controlled spacetime dilation — the ability to locally "slow" perceived time. Kael has never trained with it. It just… activates.' },
+      { title:'JIN "FLUX" ARASHI', text:'Bounty hunter. Operates across the Ash Belt independently. His mech — Phantom Veil — is rated as a specialized capture unit: ultra-light frame, phase teleport system built for disabling rather than destroying. Jin knows exactly how good he is. He also knows how rare a "live capture" flag is, and what it pays.' },
+      { title:'COMMANDER LYRA VOSS', text:'Dominion field commander, Sovereign-class mech. Known as "The Equation" within Dominion ranks — every engagement is a calculation. Cold, precise, never overshoots. Her initial engagement with Kael was standard protocol, but the Aether anomaly she detected changed the objective from elimination to acquisition.' },
+      { title:'THE ASH BELT', text:'A graveyard ring of shattered asteroids, derelict stations, and the wreckage of the Fracture War. Independent drifters use it as a base — the density of debris blocks Dominion sensor sweeps. Lately, those sweeps are getting more thorough. Something has them looking.' },
+      { title:'ROOK', text:'Kael\'s mechanic, fence, and reluctant conscience. Former Dominion engineer who defected during the Fracture War. He can rebuild Scrapfang from spare parts and a bad mood. He says he stays because the work is interesting. He stays because Kael is the only person he trusts.' },
+    ];
+    let html = '<div style="font-family:var(--font-title);font-size:clamp(11px,1.3vw,15px);letter-spacing:.2em;color:var(--aether);margin-bottom:14px;">CODEX — INTEL DATABASE</div>';
+    entries.forEach(e => {
+      html += `<div class="codex-entry"><div class="codex-title">${e.title}</div><div class="codex-text">${e.text}</div></div>`;
+    });
+    c.innerHTML = html;
+  }
+}
+
+function buyUpgrade(id) {
+  const u = UPGRADES.find(x => x.id === id);
+  if (!u || SAVE.upgrades.includes(id)) return;
+  if (SAVE.credits < u.cost) { alert('Insufficient credits.'); return; }
+  SAVE.credits -= u.cost;
+  SAVE.upgrades.push(id);
+  // Apply effects
+  if (u.effect.maxHp) SAVE.maxHp += u.effect.maxHp;
+  if (u.effect.maxAether) SAVE.maxAether += u.effect.maxAether;
+  if (u.effect.speed) SAVE.speed += u.effect.speed;
+  if (u.effect.neuralLink) SAVE.passives.push('NEURAL_LINK');
+  if (u.effect.magClaw) SAVE.passives.push('MAG_CLAW_BONUS');
+  if (u.effect.modularArms) SAVE.passives.push('MODULAR_ARMS');
+  refreshHangar();
+}
+
+// ── MISSION SELECT / BRIEFING ────────────────────────────────────
+let selectedMission = null;
+function selectMission(id) {
+  selectedMission = MISSIONS.find(m => m.id === id);
+  if (!selectedMission) return;
+  showBriefing(selectedMission);
+}
+
+function showBriefing(m) {
+  document.getElementById('br-chapter').textContent = m.chapter;
+  document.getElementById('br-title').textContent = m.title;
+  document.getElementById('br-sub').textContent = m.sub;
+  document.getElementById('br-narrative').textContent = m.narrative;
+
+  let objHtml = '';
+  m.objectives.forEach(o => {
+    objHtml += `<div class="obj-item"><div class="obj-dot ${o.danger?'danger':''}"></div><span>${o.text}</span></div>`;
+  });
+  document.getElementById('br-objectives').innerHTML = objHtml;
+
+  let enemyHtml = '';
+  m.enemies.forEach(e => {
+    const icons = { scout:'◆', gunship:'◉', interceptor:'▲', jin:'★', lyra:'✦' };
+    enemyHtml += `<div class="enemy-entry">
+      <div style="font-size:20px;width:28px;text-align:center;">${icons[e.type]||'◆'}</div>
+      <div><div class="enemy-class">${e.label}</div><div class="enemy-threat">THREAT: ${e.threat} &nbsp;×${e.count}</div></div>
+    </div>`;
+  });
+  document.getElementById('br-enemies').innerHTML = enemyHtml;
+  document.getElementById('br-intel').textContent = m.intel;
+  document.getElementById('br-rewards').innerHTML = m.rewards.split(' — ').map(r=>`<div>▸ ${r}</div>`).join('');
+
+  let loadoutHtml = '';
+  const baseAbils = ['RAPID FIRE','BOOST DASH','AETHER SYNC','OVERDRIVE'];
+  if (SAVE.upgrades.includes('upgrade_shock_net')) baseAbils.push('SHOCK NET');
+  baseAbils.forEach(a => { loadoutHtml += `<div class="loadout-chip">${a}</div>`; });
+  document.getElementById('br-loadout').innerHTML = loadoutHtml;
+
+  showScreen('briefing');
+}
+
+function launchMission() {
+  if (!selectedMission) return;
+  initGame(selectedMission);
+  showScreen('game');
+}
+
+function startFromTitle() {
+  selectedMission = MISSIONS[0];
+  showBriefing(selectedMission);
+}
+
+function showCodex() {
+  showScreen('hangar');
+  setTimeout(() => hangarTab('codex'), 50);
+}
+
+function showTitleControls() {
+  G.dialogue_queue = [
+    { speaker:'CONTROLS', speakerColor:'#ffb800', portrait:'⌨', text:'MOVE: WASD or ARROW KEYS' },
+    { speaker:'CONTROLS', speakerColor:'#ffb800', portrait:'⌨', text:'FIRE: Z or SPACE or CLICK' },
+    { speaker:'CONTROLS', speakerColor:'#ffb800', portrait:'⌨', text:'BOOST DASH: X — costs 15 Aether' },
+    { speaker:'CONTROLS', speakerColor:'#ffb800', portrait:'⌨', text:'AETHER SYNC: C — slows all enemies, costs 30 Aether' },
+    { speaker:'CONTROLS', speakerColor:'#ffb800', portrait:'⌨', text:'OVERDRIVE: V — triple shot + speed boost, costs 50 Aether' },
+    { speaker:'CONTROLS', speakerColor:'#ffb800', portrait:'⌨', text:'SHOCK NET: B — stun burst (requires upgrade), costs 20 Aether' },
+    { speaker:'TIP', speakerColor:'#00f5ff', portrait:'💡', text:'Killing enemies recharges your Aether. Neural Link upgrade adds +2 AE per kill.' },
+  ];
+  G.dialogue_index = 0;
+  G.dialogue_active = true;
+  G.paused_for_dlg = false;
+  showDlgLine();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  GAME ENGINE
+// ══════════════════════════════════════════════════════════════════
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const keys = {};
+const mouse = { x: 0, y: 0, down: false };
+window.addEventListener('keydown', e => {
+  if (G.dialogue_active && ['Space','Enter','KeyZ'].includes(e.code)) { advanceDlg(); e.preventDefault(); return; }
+  keys[e.code] = true;
+  if (e.code === 'KeyX') useAbility(1);
+  if (e.code === 'KeyC') useAbility(2);
+  if (e.code === 'KeyV') useAbility(3);
+  if (e.code === 'KeyB') useAbility(4);
+  if (e.code === 'Space' || e.code === 'KeyZ') useAbility(0);
+  if (e.code === 'Escape') pauseGame();
+  if (e.code === 'Space') e.preventDefault();
+});
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+canvas.addEventListener('mousedown', () => { mouse.down = true; useAbility(0); });
+canvas.addEventListener('mouseup', () => { mouse.down = false; });
+
+// ── GAME STATE ───────────────────────────────────────────────────
+const G = {
+  running: false, paused: false, paused_for_dlg: false, frame: 0,
+  stars: [], bullets: [], eBullets: [], enemies: [], particles: [], effects: [],
+  player: null, score: 0,
+  waveIdx: 0, waveData: [], wave_clear: false, wave_timer: 0,
+  overdrive_active: false, overdrive_timer: 0,
+  aether_regen_timer: 0,
+  dialogue_queue: [], dialogue_index: 0, dialogue_active: false,
+  mission: null, missionKills: 0, missionDmgTaken: 0, missionStart: 0
+};
+
+// ── HELPERS ──────────────────────────────────────────────────────
+const C2 = { aether:'#00f5ff', aether2:'#00b8cc', dim:'#003d47', danger:'#ff2b2b',
+  gold:'#ffb800', jin:'#ff2244', lyra:'#aaddff', white:'#ffffff', bg:'#04060e' };
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function dist(ax, ay, bx, by) { return Math.sqrt((ax-bx)**2+(ay-by)**2); }
+function rndBetween(a, b) { return a + Math.random() * (b - a); }
+
+function spawnSparks(x, y, n, color, spd, life, sz) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = spd * rndBetween(0.4, 1.2);
+    G.particles.push({ type:'spark', x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, life, maxLife:life, color, sz: sz * rndBetween(0.5, 1.2) });
+  }
+}
+function spawnRing(x, y, color, maxR) {
+  G.particles.push({ type:'ring', x, y, r:2, maxR, life:22, maxLife:22, color });
+  spawnSparks(x, y, 14, color, 5, 30, 3);
+  spawnSparks(x, y, 6, '#fff', 8, 14, 2);
+}
+function spawnText(x, y, text, color) {
+  G.effects.push({ type:'floatText', x, y, text, color, life:60, maxLife:60, vy:-1.2 });
+}
+
+// ── SCROLLING STARS ──────────────────────────────────────────────
+function initGameStars() {
+  G.stars = [];
+  for (let i = 0; i < 200; i++) {
+    G.stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+      r: rndBetween(0.3, 2.2), spd: rndBetween(0.25, 1.8), br: rndBetween(0.2, 0.8) });
+  }
+}
+
+// ── PLAYER ───────────────────────────────────────────────────────
+function createPlayer() {
+  const hasMk2 = SAVE.upgrades.includes('upgrade_scrapfang_mk2');
+  const hasShield = SAVE.shield > 0;
+  return {
+    x: canvas.width * 0.14, y: canvas.height * 0.5,
+    hp: SAVE.maxHp, maxHp: SAVE.maxHp,
+    aether: Math.floor(SAVE.maxAether * 0.4), maxAether: SAVE.maxAether,
+    shield: SAVE.shield, maxShield: SAVE.shield,
+    speed: SAVE.speed, iframes: 0, trail: [],
+    thrustT: 0, mk2: hasMk2,
+    abilities: [
+      { name:'RAPID FIRE',   cd:0, maxCd: Math.max(4, SAVE.fireRate),   cost:0  },
+      { name:'BOOST DASH',   cd:0, maxCd: SAVE.upgrades.includes('upgrade_boost_mk2') ? 48 : 60, cost:15 },
+      { name:'AETHER SYNC',  cd:0, maxCd: SAVE.upgrades.includes('upgrade_aether_frame') ? 110 : 150, cost: SAVE.upgrades.includes('upgrade_aether_frame') ? 20 : 30 },
+      { name:'OVERDRIVE',    cd:0, maxCd:380, cost:50 },
+      { name:'SHOCK NET',    cd:0, maxCd:120, cost:20, locked: !SAVE.upgrades.includes('upgrade_shock_net') },
+    ],
+    shootAuto: false
+  };
+}
+
+// ── DRAW PLAYER ──────────────────────────────────────────────────
+function drawPlayer(p) {
+  const mk2 = p.mk2;
+  const flicker = p.iframes > 0 && G.frame % 4 < 2;
+  if (flicker) return;
+
+  // Trail
+  p.trail.forEach((t, i) => {
+    const a = (i / p.trail.length) * 0.12;
+    ctx.fillStyle = `rgba(0,245,255,${a})`;
+    ctx.beginPath(); ctx.arc(t.x, t.y, 7 * (i/p.trail.length), 0, Math.PI*2); ctx.fill();
+  });
+
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  if (G.overdrive_active) { ctx.shadowColor = C2.aether; ctx.shadowBlur = 22; }
+
+  const sc = G.overdrive_active ? 1.12 : 1;
+  ctx.scale(sc, sc);
+
+  const ac = mk2 ? '#00ffcc' : C2.aether;
+  const fc = mk2 ? 'rgba(0,20,35,0.85)' : 'rgba(0,15,35,0.75)';
+
+  ctx.strokeStyle = ac; ctx.lineWidth = mk2 ? 2 : 1.5; ctx.fillStyle = fc;
+
+  // Torso
+  ctx.beginPath(); ctx.roundRect(-13, -15, 26, 30, mk2?4:2); ctx.fill(); ctx.stroke();
+  // Cockpit
+  ctx.beginPath(); ctx.roundRect(-9, -24, 18, 13, 2); ctx.fill(); ctx.stroke();
+  // Visor
+  ctx.fillStyle = G.overdrive_active ? C2.gold : (mk2 ? '#00ffcc' : C2.dim);
+  ctx.fillRect(-6, -22, 12, 3);
+
+  // Left shield arm (mk2 has larger)
+  ctx.strokeStyle = mk2 ? '#336688' : '#224466'; ctx.fillStyle = mk2 ? 'rgba(0,20,40,.8)' : 'rgba(0,15,35,.7)';
+  if (mk2) {
+    ctx.beginPath(); ctx.roundRect(-28, -9, 16, 10, 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-30, -14, 6, 20, 2); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.roundRect(-24, -7, 12, 9, 1); ctx.fill(); ctx.stroke();
+  }
+
+  // Right weapon arm
+  ctx.strokeStyle = ac; ctx.fillStyle = fc;
+  ctx.beginPath(); ctx.roundRect(13, -9, mk2?18:15, 7, 1); ctx.fill(); ctx.stroke();
+  // Barrel
+  ctx.beginPath(); ctx.moveTo(mk2?31:28, -7); ctx.lineTo(mk2?40:36, -7);
+  ctx.strokeStyle = C2.gold; ctx.lineWidth = mk2?2.5:2; ctx.stroke();
+  if (mk2) { // second barrel
+    ctx.beginPath(); ctx.moveTo(31, -2); ctx.lineTo(40, -2);
+    ctx.strokeStyle = C2.gold; ctx.stroke();
+  }
+
+  // Legs
+  ctx.lineWidth = mk2 ? 2 : 1.5; ctx.strokeStyle = ac; ctx.fillStyle = fc;
+  ctx.beginPath(); ctx.roundRect(-11, 15, 10, mk2?20:18, mk2?3:2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(1, 15, 10, mk2?20:18, mk2?3:2); ctx.fill(); ctx.stroke();
+  // Feet
+  ctx.beginPath(); ctx.roundRect(-14, mk2?33:31, 15, 6, 1); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(-1, mk2?33:31, 15, 6, 1); ctx.fill(); ctx.stroke();
+
+  // Shoulder spikes
+  ctx.fillStyle = mk2 ? '#336688' : '#224466';
+  ctx.beginPath(); ctx.moveTo(-13,-15); ctx.lineTo(-20,-22); ctx.lineTo(-13,-11); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(13,-15); ctx.lineTo(20,-22); ctx.lineTo(13,-11); ctx.closePath(); ctx.fill();
+
+  // Aether core
+  const coreP = 0.5 + 0.5 * Math.sin(G.frame * 0.1);
+  const coreC = G.overdrive_active ? C2.gold : ac;
+  ctx.beginPath(); ctx.arc(0, 3, 8, 0, Math.PI*2);
+  ctx.fillStyle = `rgba(0,245,255,${0.08 + coreP * 0.18})`; ctx.fill();
+  ctx.strokeStyle = `rgba(0,245,255,${0.4 + coreP * 0.5})`; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 3, 4, 0, Math.PI*2);
+  ctx.fillStyle = `rgba(0,245,255,${0.3 + coreP * 0.5})`; ctx.fill();
+  if (G.overdrive_active) {
+    ctx.beginPath(); ctx.arc(0, 3, 2, 0, Math.PI*2);
+    ctx.fillStyle = C2.gold; ctx.fill();
+  }
+
+  ctx.restore();
+
+  // Engine thrust
+  p.thrustT += 0.28;
+  const tLen = 16 + Math.sin(p.thrustT) * 7 + (G.overdrive_active ? 16 : 0);
+  const tg = ctx.createLinearGradient(p.x-16, p.y, p.x-16-tLen, p.y);
+  tg.addColorStop(0, G.overdrive_active ? 'rgba(0,245,255,.95)' : 'rgba(0,180,255,.85)');
+  tg.addColorStop(1, 'rgba(0,30,80,0)');
+  ctx.beginPath();
+  ctx.moveTo(p.x-14, p.y-5); ctx.lineTo(p.x-14-tLen, p.y); ctx.lineTo(p.x-14, p.y+5);
+  ctx.fillStyle = tg; ctx.fill();
+
+  // Shield ring
+  if (p.shield > 0) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(130,200,255,${0.35 + 0.15*Math.sin(G.frame*.08)})`;
+    ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.arc(p.x, p.y, 32, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+}
+
+// ── ENEMY FACTORY ────────────────────────────────────────────────
+function mkEnemy(type, spawnX, spawnY) {
+  const e = { type, x:spawnX, y:spawnY, hp:0, maxHp:0, vx:-1.5, vy:0,
+    w:30, h:30, sTimer:0, sCd:90, pattern:'straight', pTimer:0, value:100,
+    _delay:0, _spawned:false, _slow:0, tX:spawnX, tY:spawnY, phase:0, phaseT:0 };
+  switch(type) {
+    case 'scout':       e.hp=e.maxHp=22;  e.vx=-2.4; e.w=22;e.h=22; e.sCd=130; e.value=80; break;
+    case 'gunship':     e.hp=e.maxHp=55;  e.vx=-1.2; e.w=36;e.h=28; e.sCd=65;  e.value=200; e.pattern='sine'; break;
+    case 'interceptor': e.hp=e.maxHp=38;  e.vx=-2.9; e.w=28;e.h=24; e.sCd=48;  e.value=160; e.pattern='dive'; e.tY=spawnY; break;
+    case 'jin':         e.hp=e.maxHp=320; e.vx=0;    e.w=44;e.h=48; e.sCd=38;  e.value=0;   e.pattern='boss_jin';
+      e.x=canvas.width*.78; e.y=canvas.height*.5; e.tX=e.x; e.tY=e.y; break;
+    case 'lyra':        e.hp=e.maxHp=520; e.vx=0;    e.w=48;e.h=50; e.sCd=28;  e.value=0;   e.pattern='boss_lyra';
+      e.x=canvas.width*.78; e.y=canvas.height*.35; e.tX=e.x; e.tY=e.y; break;
+  }
+  return e;
+}
+
+// ── DRAW ENEMY ───────────────────────────────────────────────────
+function drawEnemy(e) {
+  const isJ = e.type === 'jin', isL = e.type === 'lyra';
+  const bc = isJ ? C2.jin : isL ? C2.lyra : '#cc4422';
+  const fc = isJ ? 'rgba(35,0,8,.85)' : isL ? 'rgba(0,8,35,.85)' : 'rgba(28,8,3,.75)';
+
+  ctx.save();
+  ctx.translate(e.x, e.y);
+  ctx.strokeStyle = bc; ctx.lineWidth = isJ||isL ? 1.8 : 1.4;
+  ctx.fillStyle = fc;
+  if (isJ || isL) { ctx.shadowColor = bc; ctx.shadowBlur = isL ? 12 : 8; }
+
+  if (isJ) {
+    // Phantom Veil — angular
+    ctx.beginPath(); ctx.roundRect(-15,-17,30,34,3); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-8,-25,16,12,2); ctx.fill(); ctx.stroke();
+    // Phase wings
+    [[[-15,-8],[-30,-18],[-24,4],[-15,2]],[[-15,4],[-28,15],[-22,22],[-15,13]]].forEach(pts => {
+      ctx.beginPath(); ctx.moveTo(...pts[0]);
+      pts.slice(1).forEach(p => ctx.lineTo(...p)); ctx.closePath(); ctx.fill(); ctx.stroke();
+    });
+    // Core
+    ctx.beginPath(); ctx.arc(0,0,6,0,Math.PI*2); ctx.fillStyle=C2.jin; ctx.fill();
+    // Thruster nozzles
+    ctx.fillStyle = fc; ctx.strokeStyle = C2.jin;
+    ctx.beginPath(); ctx.roundRect(-8,17,7,13,1); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(1,17,7,13,1); ctx.fill(); ctx.stroke();
+  } else if (isL) {
+    // Sovereign-class — military, bilateral
+    ctx.beginPath(); ctx.roundRect(-17,-20,34,40,3); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-12,-28,24,16,2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = C2.lyra; ctx.fillRect(-10,-27,20,2.5);
+    // Dual cannon arms
+    [[17,-15,22,9],[17,6,22,9]].forEach(([ax,ay,aw,ah]) => {
+      ctx.fillStyle=fc; ctx.strokeStyle=C2.lyra;
+      ctx.beginPath(); ctx.roundRect(ax,ay,aw,ah,1); ctx.fill(); ctx.stroke();
+    });
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(39,-11); ctx.lineTo(48,-11); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(39,10); ctx.lineTo(48,10); ctx.stroke();
+    // Shield plate
+    ctx.fillStyle='rgba(0,8,45,.65)'; ctx.strokeStyle=C2.lyra; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.moveTo(-17,-12); ctx.lineTo(-32,-20); ctx.lineTo(-35,2); ctx.lineTo(-17,6); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Legs
+    ctx.fillStyle=fc; ctx.strokeStyle=C2.lyra; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.roundRect(-13,20,11,15,1); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(2,20,11,15,1); ctx.fill(); ctx.stroke();
+    // Core
+    const lp = 0.5+0.5*Math.sin(G.frame*.09);
+    ctx.beginPath(); ctx.arc(0,3,7,0,Math.PI*2);
+    ctx.fillStyle=`rgba(150,210,255,${.12+lp*.2})`; ctx.fill();
+    ctx.strokeStyle=C2.lyra; ctx.lineWidth=1.2; ctx.stroke();
+  } else {
+    // Generic
+    ctx.beginPath(); ctx.roundRect(-13,-13,26,26,2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(13,0); ctx.lineTo(24,-9); ctx.lineTo(21,0); ctx.lineTo(24,9); ctx.closePath();
+    ctx.fillStyle='#cc4422'; ctx.fill();
+    ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fillStyle='#ff6633'; ctx.fill();
+  }
+  ctx.restore();
+
+  // HP bar for bosses
+  if (isJ || isL) {
+    const bw = 70, bh = 6, bx = e.x - bw/2, by = e.y - e.h/2 - 16;
+    ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle = e.hp/e.maxHp > .4 ? bc : C2.danger;
+    ctx.fillRect(bx,by,bw*(e.hp/e.maxHp),bh);
+    ctx.strokeStyle='rgba(255,255,255,.2)'; ctx.lineWidth=.6; ctx.strokeRect(bx,by,bw,bh);
+    ctx.fillStyle = bc; ctx.font = '8px "Share Tech Mono"'; ctx.textAlign = 'center';
+    ctx.fillText(isJ?'JIN "FLUX" ARASHI':'CDR. LYRA VOSS', e.x, by-3);
+  }
+
+  // Thruster trail (non-boss)
+  if (!isJ && !isL) {
+    const tg = ctx.createLinearGradient(e.x+e.w/2, e.y, e.x+e.w/2+18, e.y);
+    tg.addColorStop(0,'rgba(255,80,30,.7)'); tg.addColorStop(1,'rgba(255,30,0,0)');
+    ctx.beginPath();
+    ctx.moveTo(e.x+e.w/2-2,e.y-4); ctx.lineTo(e.x+e.w/2+18,e.y); ctx.lineTo(e.x+e.w/2-2,e.y+4);
+    ctx.fillStyle=tg; ctx.fill();
+  }
+}
+
+// ── DRAW BULLET ──────────────────────────────────────────────────
+function drawBullet(b) {
+  ctx.save();
+  ctx.shadowColor = b.col; ctx.shadowBlur = 7;
+  if (b.btype === 'player') {
+    ctx.fillStyle = C2.aether;
+    ctx.beginPath(); ctx.roundRect(b.x, b.y-2, b.len||14, b.th||4, 2); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.roundRect(b.x+2, b.y-1, (b.len||14)-4, 2, 1); ctx.fill();
+  } else if (b.btype === 'beam') {
+    ctx.fillStyle=`rgba(150,210,255,.12)`;
+    ctx.fillRect(b.x-b.len, b.y-b.th/2, b.len, b.th);
+    ctx.fillStyle=`rgba(150,210,255,.65)`;
+    ctx.fillRect(b.x-b.len, b.y-2, b.len, 4);
+  } else if (b.btype === 'jin_dart') {
+    ctx.fillStyle=C2.jin;
+    ctx.beginPath(); ctx.moveTo(b.x,b.y); ctx.lineTo(b.x-14,b.y-3.5); ctx.lineTo(b.x-9,b.y); ctx.lineTo(b.x-14,b.y+3.5); ctx.closePath(); ctx.fill();
+  } else if (b.btype === 'shocknet') {
+    const a = b.life / b.maxLife;
+    ctx.strokeStyle=`rgba(0,245,255,${a*.6})`; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r||8, 0, Math.PI*2); ctx.stroke();
+    spawnSparks(b.x, b.y, 1, C2.aether, 2, 8, 1.5);
+  } else {
+    ctx.fillStyle = b.col || '#ff6633';
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r||4, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// ── SHOOTING ────────────────────────────────────────────────────
+function playerShoot() {
+  const p = G.player; const ab = p.abilities[0];
+  if (ab.cd > 0) return;
+  ab.cd = ab.maxCd;
+  const spd = G.overdrive_active ? 17 : 13;
+  const dmg = SAVE.fireDmg * (G.overdrive_active ? 2 : 1);
+  const col = G.overdrive_active ? C2.gold : C2.aether;
+  G.bullets.push({ x:p.x+22, y:p.y, vx:spd, vy:0, len:18, th:4, btype:'player', col, dmg });
+  if (G.overdrive_active || SAVE.upgrades.includes('upgrade_modular_arms')) {
+    G.bullets.push({ x:p.x+18, y:p.y-9, vx:spd*.9, vy:-0.8, len:14, th:3, btype:'player', col, dmg:dmg*.7 });
+    G.bullets.push({ x:p.x+18, y:p.y+9, vx:spd*.9, vy:0.8,  len:14, th:3, btype:'player', col, dmg:dmg*.7 });
+  }
+}
+
+function enemyShoot(e) {
+  const p = G.player;
+  const dx=p.x-e.x, dy=p.y-e.y, d=Math.sqrt(dx*dx+dy*dy);
+  const nx=dx/d, ny=dy/d;
+  if (e.type==='lyra') {
+    G.eBullets.push({ x:e.x+44, y:e.y-11, vx:-11, vy:ny*.4, btype:'beam', len:canvas.width, th:22, col:C2.lyra, dmg:18 });
+    G.eBullets.push({ x:e.x+44, y:e.y+11, vx:-11, vy:ny*.4, btype:'beam', len:canvas.width, th:22, col:C2.lyra, dmg:18 });
+  } else if (e.type==='jin') {
+    const spd=10;
+    [-0.18, 0, 0.18].forEach((off, i) => {
+      G.eBullets.push({ x:e.x, y:e.y, vx:nx*spd, vy:(ny+off)*spd, btype:'jin_dart', r:5, col:C2.jin, dmg:i===1?14:9 });
+    });
+  } else {
+    const spd = 3.5 + Math.random()*2;
+    G.eBullets.push({ x:e.x-e.w/2, y:e.y, vx:nx*spd, vy:ny*spd, r:4, btype:'enemy', col:'#ff6633', dmg:8 });
+  }
+}
+
+// ── ABILITIES ────────────────────────────────────────────────────
+function useAbility(idx) {
+  if (!G.running || (G.paused && !G.dialogue_active)) return;
+  if (G.dialogue_active && idx !== 0) return;
+  const p = G.player; const ab = p.abilities[idx];
+  if (!ab || ab.cd > 0) return;
+  if (ab.locked) return;
+
+  if (idx===0) { playerShoot(); return; }
+  if (p.aether < ab.cost) return;
+
+  if (idx===1) { // Boost Dash
+    p.aether -= ab.cost; ab.cd = ab.maxCd;
+    const dashDist = SAVE.upgrades.includes('upgrade_boost_mk2') ? 140 : 100;
+    p.x = Math.min(canvas.width*.62, p.x + dashDist);
+    spawnSparks(p.x, p.y, 22, C2.aether, 7, 22, 3);
+    spawnRing(p.x, p.y, C2.aether, 55);
+    flashEl('aether-flash', 120);
+  } else if (idx===2) { // Aether Sync
+    p.aether -= ab.cost; ab.cd = ab.maxCd;
+    const dur = SAVE.upgrades.includes('upgrade_aether_frame') ? 130 : 90;
+    G.enemies.forEach(e => { e._slow = dur; });
+    spawnRing(p.x, p.y, C2.aether, 90);
+    flashEl('aether-flash', 200);
+    spawnText(p.x, p.y-30, 'AETHER SYNC', C2.aether);
+    queueDlg([{ speaker:'KAEL', speakerColor:C2.aether, portrait:'⚡', text:'…Time distorts.' }]);
+  } else if (idx===3) { // Overdrive
+    p.aether -= ab.cost; ab.cd = ab.maxCd;
+    G.overdrive_active = true;
+    G.overdrive_timer = SAVE.upgrades.includes('upgrade_overdrive_mod') ? 400 : 300;
+    spawnRing(p.x, p.y, C2.gold, 100);
+    flashEl('aether-flash', 250);
+    spawnText(p.x, p.y-35, 'OVERDRIVE', C2.gold);
+    queueDlg([
+      { speaker:'KAEL', speakerColor:C2.gold, portrait:'🔥', text:'I\'m not dying here!' },
+      { speaker:'SYSTEM', speakerColor:C2.aether, portrait:'⚙', text:'OVERDRIVE — AETHER SYNC ENGAGED' },
+    ]);
+  } else if (idx===4) { // Shock Net
+    p.aether -= ab.cost; ab.cd = ab.maxCd;
+    // Expanding net ring that stuns enemies
+    for (let i=0; i<8; i++) {
+      const a = (i/8)*Math.PI*2;
+      G.bullets.push({ x:p.x, y:p.y, vx:Math.cos(a)*5, vy:Math.sin(a)*5, r:8, btype:'shocknet',
+        col:C2.aether, dmg:3, life:30, maxLife:30, isNet:true });
+    }
+    spawnRing(p.x, p.y, C2.aether, 70);
+    flashEl('aether-flash', 100);
+    spawnText(p.x, p.y-30, 'SHOCK NET', '#aaffee');
+  }
+}
+
+// ── DIALOGUE ────────────────────────────────────────────────────
+function queueDlg(lines, pause=true) {
+  G.dialogue_queue = lines;
+  G.dialogue_index = 0;
+  G.dialogue_active = true;
+  G.paused_for_dlg = pause;
+  showDlgLine();
+}
+function showDlgLine() {
+  const ln = G.dialogue_queue[G.dialogue_index];
+  if (!ln) { closeDlg(); return; }
+  document.getElementById('dlg-portrait').textContent = ln.portrait || '?';
+  document.getElementById('dlg-speaker').style.color = ln.speakerColor || '#fff';
+  document.getElementById('dlg-speaker').textContent = ln.speaker;
+  document.getElementById('dlg-text').textContent = ln.text;
+  document.getElementById('dlg-box').style.display = 'block';
+}
+function advanceDlg() {
+  G.dialogue_index++;
+  if (G.dialogue_index >= G.dialogue_queue.length) closeDlg();
+  else showDlgLine();
+}
+function closeDlg() {
+  document.getElementById('dlg-box').style.display = 'none';
+  G.dialogue_active = false;
+  G.paused_for_dlg = false;
+}
+
+// ── FLASH EFFECTS ────────────────────────────────────────────────
+function flashEl(id, duration) {
+  const el = document.getElementById(id);
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, duration);
+}
+
+// ── WAVE SYSTEM ──────────────────────────────────────────────────
+const WAVE_DIALOGUES = {
+  'FIRST CONTACT': [
+    { speaker:'KAEL',  speakerColor:C2.aether, portrait:'⚠', text:'She\'s trying to kill me for real.' },
+    { speaker:'LYRA',  speakerColor:C2.lyra, portrait:'◈', text:'All unauthorized units will be eliminated.' },
+  ],
+  'JACKPOT': [
+    { speaker:'JIN',  speakerColor:C2.jin, portrait:'★', text:'Well well… jackpot.' },
+    { speaker:'JIN',  speakerColor:C2.jin, portrait:'★', text:'You\'re expensive.' },
+    { speaker:'KAEL', speakerColor:C2.aether, portrait:'⚡', text:'Who the hell are you?!' },
+    { speaker:'JIN',  speakerColor:C2.jin, portrait:'★', text:'The guy cashing you in.' },
+  ],
+  'BREAK OUT': [
+    { speaker:'ROOK', speakerColor:'#66cc66', portrait:'🔧', text:'Kael — corridor is PACKED. Push through or you\'re done.' },
+    { speaker:'KAEL', speakerColor:C2.aether, portrait:'⚡', text:'I see them. Rook, stay behind me.' },
+  ]
+};
+
+function announceWave(title, sub) {
+  document.getElementById('wa-title').textContent = title;
+  document.getElementById('wa-sub').textContent = sub;
+  const el = document.getElementById('wave-announce');
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 2800);
+}
+
+function spawnWave(wIdx) {
+  const mission = G.mission;
+  if (!mission || wIdx >= mission.waves.length) return;
+  const wDef = mission.waves[wIdx];
+  G.wave_clear = false;
+  G.enemies = [];
+
+  const isBoss = wDef.bossWave || wDef.list.some(t => t==='jin'||t==='lyra');
+  const delay = isBoss ? 0 : 55;
+
+  wDef.list.forEach((type, i) => {
+    const e = mkEnemy(type, canvas.width + 60 + (isBoss ? 0 : i*80),
+      canvas.height * (0.12 + (i % 5) * 0.18));
+    e._delay = isBoss ? 0 : i * delay;
+    G.enemies.push(e);
+  });
+
+  announceWave(wDef.label, wDef.sub);
+
+  // Boss bar
+  const hasBoss = wDef.list.some(t=>t==='jin'||t==='lyra');
+  document.getElementById('boss-bar').style.display = hasBoss ? 'flex' : 'none';
+  if (hasBoss) {
+    const boss = G.enemies.find(e=>e.type==='jin'||e.type==='lyra');
+    if (boss) {
+      document.getElementById('boss-bar-name').textContent = boss.type==='jin'?'JIN "FLUX" ARASHI':'CDR. LYRA VOSS';
+      document.getElementById('boss-bar-name').style.color = boss.type==='jin' ? C2.jin : C2.lyra;
+      document.getElementById('boss-bar-fill').style.background = boss.type==='jin' ? C2.jin : C2.lyra;
+      const pips = document.getElementById('boss-bar-pips');
+      pips.innerHTML = '';
+      for (let i=0;i<3;i++){const p=document.createElement('div');p.className='boss-pip active';pips.appendChild(p);}
+    }
+  }
+
+  const dlg = WAVE_DIALOGUES[wDef.label];
+  if (dlg) setTimeout(() => queueDlg(dlg, false), 1600);
+}
+
+// ── COLLISION ────────────────────────────────────────────────────
+function rectHit(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+function circRect(cx,cy,cr,rx,ry,rw,rh){const nx=Math.max(rx,Math.min(cx,rx+rw)),ny=Math.max(ry,Math.min(cy,ry+rh));return(cx-nx)**2+(cy-ny)**2<cr*cr;}
+
+// ── UPDATE ───────────────────────────────────────────────────────
+function update() {
+  if (!G.running || G.paused_for_dlg) return;
+  G.frame++;
+  const p = G.player;
+  const spd = G.overdrive_active ? p.speed*1.55 : p.speed;
+
+  // Movement
+  if (keys['ArrowUp']||keys['KeyW'])    p.y -= spd;
+  if (keys['ArrowDown']||keys['KeyS'])  p.y += spd;
+  if (keys['ArrowLeft']||keys['KeyA'])  p.x -= spd*.8;
+  if (keys['ArrowRight']||keys['KeyD']) p.x += spd*.8;
+  p.x = Math.max(28, Math.min(canvas.width*.56, p.x));
+  p.y = Math.max(28, Math.min(canvas.height-28, p.y));
+
+  // Trail
+  p.trail.push({ x:p.x, y:p.y });
+  if (p.trail.length > 12) p.trail.shift();
+
+  // Cooldowns
+  p.abilities.forEach(ab => { if (ab.cd > 0) ab.cd--; });
+  if (p.iframes > 0) p.iframes--;
+
+  // Overdrive
+  if (G.overdrive_active) {
+    G.overdrive_timer--;
+    if (G.overdrive_timer <= 0) { G.overdrive_active = false; spawnText(p.x,p.y-30,'OVERDRIVE END',C2.gold); }
+  }
+
+  // Aether regen
+  G.aether_regen_timer++;
+  const regenRate = SAVE.upgrades.includes('upgrade_aether_amplifier') ? 12 : 24;
+  if (G.aether_regen_timer >= regenRate) {
+    G.aether_regen_timer = 0;
+    if (p.aether < p.maxAether) p.aether = Math.min(p.maxAether, p.aether + 0.6);
+  }
+
+  // Stars scroll
+  G.stars.forEach(s => {
+    s.x -= s.spd * (G.overdrive_active ? 2.2 : 1);
+    if (s.x < 0) { s.x = canvas.width; s.y = Math.random()*canvas.height; }
+  });
+
+  // Spawn enemies
+  G.enemies.forEach(e => { if (e._delay > 0) e._delay--; else e._spawned = true; });
+
+  // Update enemies
+  G.enemies = G.enemies.filter(e => {
+    if (!e._spawned) return true;
+    if (e.hp <= 0) return false;
+    const sm = e._slow > 0 ? 0.18 : 1;
+    if (e._slow > 0) e._slow--;
+    e.pTimer++;
+
+    switch(e.pattern) {
+      case 'straight': e.x += e.vx*sm; break;
+      case 'sine': e.x += e.vx*sm; e.vy=Math.sin(e.pTimer*.04)*1.6; e.y+=e.vy*sm; break;
+      case 'dive':
+        if (!e._dive) { if (e.x < canvas.width*.72) e._dive=true; }
+        if (e._dive) { e.vy=Math.sign(p.y-e.y)*Math.min(Math.abs(p.y-e.y)*.05,3); e.x+=e.vx*.5*sm; e.y+=e.vy*sm; }
+        else e.x+=e.vx*sm;
+        break;
+      case 'boss_jin':
+        e.phaseT++;
+        if (e.phaseT > 180) { e.phase=(e.phase+1)%3; e.phaseT=0; }
+        if (e.phase===0) { e.tY=canvas.height*.3+Math.sin(G.frame*.035)*canvas.height*.3; e.tX=canvas.width*.72; }
+        else if (e.phase===1) { e.tX=canvas.width*.52; e.tY=p.y; }
+        else if (e.phaseT===1) {
+          spawnSparks(e.x,e.y,22,C2.jin,9,20,4);
+          e.x=canvas.width*.82; e.y=canvas.height*(0.18+Math.random()*.62);
+          e.tX=e.x; e.tY=e.y;
+        }
+        e.x=lerp(e.x,e.tX,.04*sm); e.y=lerp(e.y,e.tY,.04*sm);
+        break;
+      case 'boss_lyra':
+        e.phaseT++;
+        if (e.phaseT > 220) { e.phase=(e.phase+1)%3; e.phaseT=0; }
+        const lyraYs = [canvas.height*.22,canvas.height*.5,canvas.height*.76];
+        e.tY = lyraYs[e.phase]; e.tX = canvas.width*.76;
+        e.x=lerp(e.x,e.tX,.022*sm); e.y=lerp(e.y,e.tY,.022*sm);
+        break;
+    }
+    if (e.x < -100 || e.y < -100 || e.y > canvas.height+100) return false;
+
+    // Enemy shoot
+    e.sTimer++;
+    const scd = e._slow > 0 ? e.sCd*4 : e.sCd;
+    if (e.sTimer >= scd) { e.sTimer=0; enemyShoot(e); }
+    return true;
+  });
+
+  // Update boss HP bar
+  const boss = G.enemies.find(e=>e.type==='jin'||e.type==='lyra');
+  if (boss) {
+    document.getElementById('boss-bar-fill').style.width = (boss.hp/boss.maxHp*100)+'%';
+    const pips = document.getElementById('boss-bar-pips').children;
+    const phases = Math.floor(boss.hp/boss.maxHp*3);
+    for (let i=0;i<pips.length;i++) pips[i].classList.toggle('active', i<phases);
+  }
+
+  // Update player bullets
+  G.bullets = G.bullets.filter(b => {
+    if (b.isNet) { b.life--; if (b.life<=0) return false; }
+    b.x += b.vx; b.y += b.vy;
+    if (b.x > canvas.width+30||b.y<-30||b.y>canvas.height+30) return false;
+
+    let hit = false;
+    G.enemies.forEach(e => {
+      if (!e._spawned||e.hp<=0) return;
+      const col = b.isNet
+        ? circRect(b.x,b.y,b.r||8,e.x-e.w/2,e.y-e.h/2,e.w,e.h)
+        : rectHit(b.x,b.y-2,b.len||14,b.th||4,e.x-e.w/2,e.y-e.h/2,e.w,e.h);
+      if (!col) return;
+      e.hp -= b.dmg;
+      spawnSparks(b.x,b.y,5,C2.aether,3,12,2);
+      if (!b.isNet) hit = true;
+      if (b.isNet) e._slow = Math.max(e._slow||0, 80);
+      if (e.hp <= 0) {
+        G.score += e.value;
+        G.missionKills++;
+        SAVE.totalKills++;
+        const ae_gain = SAVE.upgrades.includes('upgrade_neural_link') ? 10 : 6;
+        p.aether = Math.min(p.maxAether, p.aether + ae_gain);
+        spawnRing(e.x,e.y, e.type==='jin'?C2.jin:e.type==='lyra'?C2.lyra:'#ff6633', 45);
+        if (e.value>0) spawnText(e.x,e.y-20,'+'+'₿'+e.value, C2.gold);
+      }
+    });
+    return !hit;
+  });
+
+  // Update enemy bullets
+  G.eBullets = G.eBullets.filter(b => {
+    b.x+=b.vx; b.y+=b.vy;
+    if (b.x<-250||b.x>canvas.width+30||b.y<-60||b.y>canvas.height+60) return false;
+    if (p.iframes<=0) {
+      let hit = false;
+      if (b.btype==='beam') hit = p.y >= b.y-b.th/2 && p.y<=b.y+b.th/2;
+      else hit = circRect(b.x,b.y,b.r||4,p.x-15,p.y-17,30,34);
+      if (hit) {
+        const dmg = Math.max(0, b.dmg - (p.shield > 0 ? Math.min(p.shield, b.dmg*.5) : 0));
+        if (p.shield > 0) p.shield = Math.max(0, p.shield - b.dmg*.5);
+        p.hp -= dmg;
+        G.missionDmgTaken += dmg;
+        p.iframes = 58;
+        spawnSparks(p.x,p.y,10,C2.danger,5,18,3);
+        flashEl('danger-flash', 100);
+        b.dead = true;
+        if (p.hp<=0) { p.hp=0; endMission(false); }
+      }
+    }
+    return !b.dead;
+  });
+
+  // Particles
+  G.particles = G.particles.filter(pt => {
+    pt.life--;
+    if (pt.type==='spark') { pt.x+=pt.vx; pt.y+=pt.vy; pt.vx*=.91; pt.vy*=.91; }
+    else if (pt.type==='ring') { pt.r=pt.maxR*(1-pt.life/pt.maxLife); }
+    return pt.life>0;
+  });
+  G.effects = G.effects.filter(ef => {
+    ef.life--; ef.y+=ef.vy;
+    return ef.life>0;
+  });
+
+  // Wave clear check
+  const alive = G.enemies.filter(e=>e._spawned&&e.hp>0).length;
+  const pending = G.enemies.filter(e=>!e._spawned||e._delay>0).length;
+  if (!G.wave_clear && alive===0 && pending===0) {
+    G.wave_clear = true; G.wave_timer = 100;
+  }
+  if (G.wave_clear) {
+    G.wave_timer--;
+    if (G.wave_timer<=0) {
+      G.waveIdx++;
+      if (G.waveIdx >= G.mission.waves.length) endMission(true);
+      else spawnWave(G.waveIdx);
+    }
+  }
+
+  updateHUD();
+}
+
+// ── DRAW ─────────────────────────────────────────────────────────
+function draw() {
+  ctx.fillStyle = C2.bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+  // Nebula
+  const ng = ctx.createRadialGradient(canvas.width*.5,canvas.height*.5,0,canvas.width*.5,canvas.height*.5,canvas.width*.65);
+  ng.addColorStop(0,'rgba(0,12,38,.45)'); ng.addColorStop(1,'rgba(4,6,14,0)');
+  ctx.fillStyle=ng; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Stars
+  G.stars.forEach(s => {
+    ctx.fillStyle=`rgba(255,255,255,${s.br*.65})`;
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  });
+
+  // Particles
+  G.particles.forEach(pt => {
+    ctx.save(); ctx.globalAlpha = pt.life/pt.maxLife;
+    if (pt.type==='spark') {
+      ctx.fillStyle=pt.color; ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.sz,0,Math.PI*2); ctx.fill();
+    } else if (pt.type==='ring') {
+      ctx.strokeStyle=pt.color; ctx.lineWidth=2; ctx.globalAlpha*=.5;
+      ctx.beginPath(); ctx.arc(pt.x,pt.y,pt.r,0,Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  G.enemies.forEach(e => { if (e._spawned&&e.hp>0) drawEnemy(e); });
+  G.bullets.forEach(drawBullet);
+  G.eBullets.forEach(drawBullet);
+  drawPlayer(G.player);
+
+  // Overdrive ring
+  if (G.overdrive_active) {
+    ctx.save(); ctx.strokeStyle=C2.gold; ctx.lineWidth=2;
+    ctx.globalAlpha=.35+.2*Math.sin(G.frame*.14);
+    ctx.beginPath(); ctx.arc(G.player.x,G.player.y,52+Math.sin(G.frame*.2)*8,0,Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // Floating text effects
+  G.effects.forEach(ef => {
+    ctx.save(); ctx.globalAlpha = ef.life/ef.maxLife;
+    ctx.font='bold 13px "Share Tech Mono"'; ctx.textAlign='center';
+    ctx.fillStyle=ef.color; ctx.shadowColor=ef.color; ctx.shadowBlur=10;
+    ctx.fillText(ef.text, ef.x, ef.y);
+    ctx.restore();
+  });
+}
+
+// ── HUD UPDATE ───────────────────────────────────────────────────
+function updateHUD() {
+  const p = G.player;
+  document.getElementById('hud-hp').style.width=(p.hp/p.maxHp*100)+'%';
+  document.getElementById('hud-hp-n').textContent=Math.ceil(p.hp);
+  document.getElementById('hud-ae').style.width=(p.aether/p.maxAether*100)+'%';
+  document.getElementById('hud-ae-n').textContent=Math.ceil(p.aether);
+  document.getElementById('hud-sh').style.width=(p.maxShield>0?p.shield/p.maxShield*100:0)+'%';
+  document.getElementById('hud-sh-n').textContent=Math.ceil(p.shield);
+  document.getElementById('hud-score').textContent='₿ '+G.score.toLocaleString();
+  const wDef = G.mission?.waves[G.waveIdx];
+  document.getElementById('hud-wave').textContent=wDef?wDef.label:'COMPLETE';
+  document.getElementById('hud-hostiles').textContent=G.enemies.filter(e=>e._spawned&&e.hp>0).length+' REMAINING';
+  if (G.overdrive_active) {
+    document.getElementById('hud-status').textContent='⚡ OVERDRIVE ACTIVE';
+    document.getElementById('hud-status').style.color=C2.gold;
+  } else {
+    document.getElementById('hud-status').textContent='';
+  }
+
+  p.abilities.forEach((ab,i) => {
+    const icon = document.getElementById('ab'+i);
+    const cdm = document.getElementById('cdm'+i);
+    const frac = ab.cd/ab.maxCd;
+    cdm.style.transform=`scaleY(${frac})`;
+    icon.className='ab-icon '+((ab.locked)?'':ab.cd>0?'cd':'ready');
+    if (G.overdrive_active && i===3) icon.classList.add('active-ability');
+  });
+}
+
+// ── GAME INIT ────────────────────────────────────────────────────
+function initGame(mission) {
+  resizeCanvas(); initGameStars();
+  G.player = createPlayer();
+  G.mission = mission;
+  G.score = 0; G.waveIdx = 0; G.frame = 0;
+  G.bullets=[]; G.eBullets=[]; G.enemies=[]; G.particles=[]; G.effects=[];
+  G.overdrive_active=false; G.wave_clear=false;
+  G.missionKills=0; G.missionDmgTaken=0; G.missionStart=Date.now();
+  G.running=true; G.paused=false; G.paused_for_dlg=false;
+  G.dialogue_active=false;
+  document.getElementById('dlg-box').style.display='none';
+  document.getElementById('boss-bar').style.display='none';
+  // Unlock shock net visually
+  const ab4 = document.getElementById('ab4');
+  ab4.style.opacity = SAVE.upgrades.includes('upgrade_shock_net') ? '1' : '.3';
+
+  setTimeout(() => {
+    const openDlg = [
+      { speaker:'ROOK', speakerColor:'#66cc66', portrait:'🔧', text:'Systems green. Aether core\'s unstable as usual. Watch the belt — Dominion patrol signatures ahead.' },
+      { speaker:'KAEL', speakerColor:C2.aether, portrait:'⚡', text:'Copy. Moving in.' },
+    ];
+    queueDlg(openDlg, false);
+    setTimeout(() => spawnWave(0), 1800);
+  }, 300);
+
+  requestAnimationFrame(gameLoop);
+}
+
+function gameLoop() {
+  update(); draw();
+  if (G.running) requestAnimationFrame(gameLoop);
+}
+
+function pauseGame() {
+  if (!G.running) return;
+  G.paused_for_dlg = !G.paused_for_dlg;
+}
+
+// ── MISSION END ──────────────────────────────────────────────────
+function endMission(success) {
+  G.running = false;
+  document.getElementById('boss-bar').style.display='none';
+
+  if (!success) {
+    SAVE.totalDeaths++;
+    showScreen('overlay');
+    document.getElementById('ov-title').textContent='HULL BREACH';
+    document.getElementById('ov-title').style.color=C2.danger;
+    document.getElementById('ov-sub').textContent='MISSION FAILED — '+G.mission.title;
+    document.getElementById('ov-stats').innerHTML=
+      `KILLS THIS RUN: ${G.missionKills}<br>BOUNTY EARNED: ₿ ${G.score}<br>DAMAGE TAKEN: ${Math.ceil(G.missionDmgTaken)}<br>WAVE REACHED: ${G.waveIdx+1} / ${G.mission.waves.length}`;
+    // partial credits
+    const partial = Math.floor(G.score * 0.5);
+    SAVE.credits += partial;
+    return;
+  }
+
+  // Success!
+  const elapsed = Math.floor((Date.now()-G.missionStart)/1000);
+  SAVE.credits += G.mission.rewardCredits + G.score;
+  SAVE.xp += G.mission.rewardXP;
+  while (SAVE.xp >= SAVE.level * XP_PER_LEVEL) { SAVE.level++; }
+  if (!SAVE.missionsComplete.includes(G.mission.id)) {
+    SAVE.missionsComplete.push(G.mission.id);
+  }
+  G.mission.unlocks.forEach(u => { if (!SAVE.upgrades.includes(u) && !SAVE.upgrades.includes(u)) {} }); // just make visible
+  if (G.mission.storyUnlock && !SAVE.storyFlags.includes(G.mission.storyUnlock)) {
+    SAVE.storyFlags.push(G.mission.storyUnlock);
+  }
+  if (G.score > SAVE.highScore) SAVE.highScore = G.score;
+
+  // Rank
+  const kills = G.missionKills, dmg = G.missionDmgTaken;
+  let rank='C', rankCol=C2.aether;
+  if (dmg<20&&kills>=G.enemies.length*.8) { rank='S'; rankCol=C2.gold; }
+  else if (dmg<50) { rank='A'; rankCol=C2.aether; }
+  else if (dmg<100) { rank='B'; rankCol='#88aaff'; }
+
+  // Build post screen
+  document.getElementById('post-result').textContent='MISSION CLEAR';
+  document.getElementById('post-result').style.color=C2.aether;
+  document.getElementById('post-mission-name').textContent=G.mission.title+' — '+G.mission.sub;
+  document.getElementById('post-rank').textContent=rank;
+  document.getElementById('post-rank').style.color=rankCol;
+
+  document.getElementById('post-stats').innerHTML=`
+    <div class="post-stat"><div class="post-stat-lbl">BOUNTY EARNED</div><div class="post-stat-val">₿ ${(G.mission.rewardCredits+G.score).toLocaleString()}</div></div>
+    <div class="post-stat"><div class="post-stat-lbl">KILLS</div><div class="post-stat-val">${G.missionKills}</div></div>
+    <div class="post-stat"><div class="post-stat-lbl">DAMAGE TAKEN</div><div class="post-stat-val">${Math.ceil(G.missionDmgTaken)}</div></div>
+    <div class="post-stat"><div class="post-stat-lbl">TIME</div><div class="post-stat-val">${elapsed}s</div></div>
+    <div class="post-stat"><div class="post-stat-lbl">XP GAINED</div><div class="post-stat-val">+${G.mission.rewardXP}</div></div>
+    <div class="post-stat"><div class="post-stat-lbl">PILOT LEVEL</div><div class="post-stat-val">LV ${SAVE.level}</div></div>
+  `;
+
+  document.getElementById('post-rewards').innerHTML=`
+    <div class="reward-row"><div class="reward-icon">💰</div><div class="reward-text">Mission Bounty</div><div class="reward-val">₿ ${G.mission.rewardCredits}</div></div>
+    <div class="reward-row"><div class="reward-icon">⚔</div><div class="reward-text">Combat Bonus (${G.missionKills} kills)</div><div class="reward-val">₿ ${G.score}</div></div>
+    <div class="reward-row"><div class="reward-icon">⬆</div><div class="reward-text">Pilot XP</div><div class="reward-val">+${G.mission.rewardXP} XP</div></div>
+  `;
+
+  const unlocksEl = document.getElementById('post-unlock');
+  const unlockedNames = G.mission.unlocks.map(uid => {
+    const u = UPGRADES.find(x=>x.id===uid); return u?u.name:uid;
+  });
+  if (unlockedNames.length>0) {
+    unlocksEl.style.display='block';
+    document.getElementById('post-unlock-text').innerHTML = unlockedNames.map(n=>`<div>▸ ${n} — now available in workshop</div>`).join('');
+  } else { unlocksEl.style.display='none'; }
+
+  document.getElementById('post-debrief').textContent = G.mission.postDebrief;
+  document.getElementById('post-story-update').textContent = G.mission.postStory;
+
+  showScreen('post');
+}
+
+function retryMission() {
+  if (!selectedMission) return;
+  initGame(selectedMission);
+  showScreen('game');
+}
+function nextMission() {
+  const nextIdx = G.mission ? G.mission.id + 1 : 0;
+  const next = MISSIONS[nextIdx];
+  if (next) { selectedMission=next; showBriefing(next); }
+  else { showScreen('hangar'); }
+}
+function goToShop() {
+  showScreen('hangar');
+  setTimeout(() => hangarTab('upgrades'), 60);
+}
+
+// ── INITIAL RENDER ───────────────────────────────────────────────
+refreshHangar();
+</script>
